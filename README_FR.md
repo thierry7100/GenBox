@@ -59,26 +59,26 @@ Voir ci dessous pour le mode d'emploi.
 La partie interface homme-machine de l'extension se présente sous forme d'onglets
 Les onglets sont a priori à utiliser dans l'ordre, qui se veut logique...
 
-* Onglet dimensions. Il donne les dimensions <bold>intérieures</bold> de la boîte. Vous pouvez choisir l'unité, mais seuls les mm ont été testés ! Bien faire attention à l'épaisseur du matériau sinon les encoches ne vont pas bien s'assembler. J'ai eu des matériaux qui ne respectent pas vraiment leurs côtes (ex MDF 3mm qui fait 3.2mm). Cela parait anodin, mais cela gêne considérablement voire empêche l'assemblage. L'entrée compensation du faisceau laser donne la "taille" de ca qui est enlevé par la laser. Pour du bois, 0.1mm est une bonne valeur. Pour du plexiglas ou du PMMA, monter à environ 0.2mm sinon les assemblages seront lâches et nécessiteront de la colle.<br>
+1. Onglet dimensions. Il donne les dimensions <bold>intérieures</bold> de la boîte. Vous pouvez choisir l'unité, mais seuls les mm ont été testés ! Bien faire attention à l'épaisseur du matériau sinon les encoches ne vont pas bien s'assembler. J'ai eu des matériaux qui ne respectent pas vraiment leurs côtes (ex MDF 3mm qui fait 3.2mm). Cela parait anodin, mais cela gêne considérablement voire empêche l'assemblage. L'entrée compensation du faisceau laser donne la "taille" de ca qui est enlevé par la laser. Pour du bois, 0.1mm est une bonne valeur. Pour du plexiglas ou du PMMA, monter à environ 0.2mm sinon les assemblages seront lâches et nécessiteront de la colle.<br>
 
 <center>
 ![Onglet_Dimensions](https://user-images.githubusercontent.com/35993911/69336761-8fab0e00-0c5f-11ea-916b-4c8cdd9ac8fb.png)
 </center><br>
 
-* Onglet coins arrondis. La permière case permet de forcer tous les coins comme droits. Sinon, vous pouvez choisir le rayon de courbure de chaque coin de manière indépendante. 0 indique un coin droit. Attention à ne pas mettre de valeur trop faible. Toute valeur supérieure à 0 et inférieure à 10 (environ) devrait être proscrite. <br>
+2. Onglet coins arrondis. La permière case permet de forcer tous les coins comme droits. Sinon, vous pouvez choisir le rayon de courbure de chaque coin de manière indépendante. 0 indique un coin droit. Attention à ne pas mettre de valeur trop faible. Toute valeur supérieure à 0 et inférieure à 10 (environ) devrait être proscrite. <br>
 
 <center>![Onglet_CoinsArrondis](https://user-images.githubusercontent.com/35993911/69336767-93d72b80-0c5f-11ea-9c42-00ed50379fef.png)</center><br>
 
-* Onglet style de couvercle. Les différents styles de couvercle ont été détaillés dans le paragraphe précédent. Choisissez celui va convient à votre usage. Attention les couvercles à glissière ou avec charnière sont incompatibles avec des coins arrondis à l'arrière de la boîte. Pour les coffres, les 4 coins doivent être droits.
+3. Onglet style de couvercle. Les différents styles de couvercle ont été détaillés dans le paragraphe précédent. Choisissez celui va convient à votre usage. Attention les couvercles à glissière ou avec charnière sont incompatibles avec des coins arrondis à l'arrière de la boîte. Pour les coffres, les 4 coins doivent être droits.
 <center>
 ![Onglet_Couvercle](https://user-images.githubusercontent.com/35993911/69336771-976ab280-0c5f-11ea-92d0-d22e4161d1c7.png)</center><br>
 
-* Onglet cases intérieures. L'intérieur de la boîte peut être divisé en cases, vous pouvez fixer le nombre de colonnes et de rangées. Attention quand un de ces nombres un plus grand que 1, le logiciel génère une plaque intérieure, pour éviter d'avoir les encoches sur les faces visibles. Ne vous étonnez pas si vous avez un peu plus de pièces. La taille des cases doit être au minimum de 20mm, à vous de respecter cela.<br>
+4. Onglet cases intérieures. L'intérieur de la boîte peut être divisé en cases, vous pouvez fixer le nombre de colonnes et de rangées. Attention quand un de ces nombres un plus grand que 1, le logiciel génère une plaque intérieure, pour éviter d'avoir les encoches sur les faces visibles. Ne vous étonnez pas si vous avez un peu plus de pièces. La taille des cases doit être au minimum de 20mm, à vous de respecter cela.<br>
 
 <center>
 ![OngletCasesInterieures](https://user-images.githubusercontent.com/35993911/69336801-a6e9fb80-0c5f-11ea-9f6f-d8ce6b19e5ce.png)</center><br>
 
-* Onglet encoches. Vous pouvez donner la taille des encoches par direction (X=longueur, Y= largeur, Z=hauteur). Vous pouvez aussi laisser l'extension choisir ce qui est raisonnable vu la taille de la boîte.<br>
+5. Onglet encoches. Vous pouvez donner la taille des encoches par direction (X=longueur, Y= largeur, Z=hauteur). Vous pouvez aussi laisser l'extension choisir ce qui est raisonnable vu la taille de la boîte.<br>
 
 <center>![OngletEncoches](https://user-images.githubusercontent.com/35993911/69336791-a3567480-0c5f-11ea-90db-360ee66d64c1.png)
 </center><br>
