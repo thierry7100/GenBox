@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<inkscape-extension>
+	<name>Gérérateur de boîtes</name>
+	<id>fr.fablab-lannion.inkscape.gen_box</id>
+	<dependency type="executable" location="extensions">inkex.py</dependency>
+	<dependency type="executable" location="extensions">gen_box.py</dependency>
+	<dependency type="executable" location="extensions">th_inkscape_path.py</dependency>
+	<param name="Topic" type="notebook">
+		<page name="dimensions" gui-text="Taille de la boîte">
+			<param name="unit" type="enum" gui-text="Unité">
+				<_item value="mm">mm</_item>
+				<_item value="cm">cm</_item>
+				<_item value="m">m</_item>
+				<_item value="km">km</_item>
+				<_item value="in">in</_item>
+				<_item value="ft">ft</_item>
+				<_item value="yd">yd</_item>
+				<_item value="pt">pt</_item>
+				<_item value="px">px</_item>
+				<_item value="pc">pc</_item>
+			</param>
+			<param name="name" type="description" appearance="header">Dimensions intérieures</param>
+			<param name="x" type="float" min="10.0" max="1000.0" _gui-text="Longueur">80.0</param>
+			<param name="y" type="float" min="10.0" max="1000.0" _gui-text="Largeur">60.0</param>
+			<param name="z" type="float" min="10.0" max="1000.0" _gui-text="Hauteur">40.0</param>
+			<param name="thickness" type="float" min="1.0" max="10.0" _gui-text="Epaisseur matériau">3.0</param>
+			<param name="burn" type="float" min="0.0" max="2.0" _gui-text="Compensation faisceau laser">0.1</param>
+		</page>
+		<page name="corners" _gui-text="Coins arrondis">
+			<param name="StraigthCorners" type="boolean" gui-text="Pas de coins arrondis">true</param>
+			<param name="name" type="description">Si option précdente non choisie, rayon de chaque coin</param>
+			<param name="back_left_radius" type="float" min="0.0" max="100.0" gui-text="Arrière gauche">10.0</param>
+			<param name="back_right_radius" type="float" min="0.0" max="100.0" gui-text="Arrière droit">10.0</param>
+			<param name="front_left_radius" type="float" min="0.0" max="100.0" gui-text="Avant gauche">10.0</param>
+			<param name="front_right_radius" type="float" min="0.0" max="100.0" gui-text="Avant droit">10.0</param>
+		</page>
+		<page name="Lid" _gui-text="Style couvercle">
+			<param name="lid_type" type="enum" _gui-text="Lid style">
+				<item value="Without">Sans couvercle</item>
+				<item value="Closed">Boîte fermée</item>				
+				<item value="Simple">Couvercle posé</item>
+				<item value="Sliding">Couvercle glissant</item>
+				<item value="WoodHinge">Charnière bois</item>
+				<item value="SteelHinge">Charnière métal</item>
+				<item value="Coffin">Coffre</item>
+			</param>
+			<param name="name" type="description" appearance="header">Hauteur couvercle (seulement avec des vrais couvercles)</param>
+			<param name="z_lid" type="float" min="15.0" max="1000.0" gui-text="Hauteur couvercle">20.0</param>
+			<param name="name" type="description" appearance="header">Seulement pour le style coffre</param>
+			<param name="z_dome_lid" type="float" min="15.0" max="1000.0" gui-text="Hauteur du dôme">20.0</param>
+			<param name="SkipFlexLines" type="boolean" _gui-text="Simplification lignes flex">true</param>
+		</page>
+		<page name="Slots" _gui-text="Cases intérieures slots">
+			<param name="n_slot_x" type="int" min="1" max="20" _gui-text="Colonnes">1</param>
+			<param name="n_slot_y" type="int" min="1" max="20" _gui-text="Rangées">1</param>
+		</page>
+		<page name="Joints" _gui-text="Encoches">
+			<param name="AutoSize" type="boolean" gui-text="Taille calculée automatiquement">true</param>
+			<param name="x_joint" type="float" min="1.0" max="100.0" gui-text="Taille des encoches sens X (longueur)">5.0</param>
+			<param name="y_joint" type="float" min="1.0" max="100.0" gui-text="Taille des encoches sens Y (largeur)">5.0</param>
+			<param name="z_joint" type="float" min="1.0" max="100.0" gui-text="Taille des encoches sens Z (hauteur)">5.0</param>
+		</page>
+	</param>	
+	<effect>
+		<object-type>all</object-type>
+		<effects-menu>
+			<submenu _name="Fablab"/>
+		</effects-menu>
+	</effect>
+	<script>
+		<command reldir="extensions" interpreter="python">gen_box.py</command>
+	</script>
+</inkscape-extension>
