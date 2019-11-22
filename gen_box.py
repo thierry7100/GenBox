@@ -2433,7 +2433,19 @@ class GenericBox(inkex.Effect):
             back_right_radius = self.unittouu(str(self.options.back_right_radius) + unit)
             front_right_radius = self.unittouu(str(self.options.front_right_radius) + unit)
             front_left_radius = self.unittouu(str(self.options.front_left_radius) + unit)
-        
+            if back_left_radius > 0 and back_left_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here back_left_radius='+str(back_left_radius)+ 'mm')
+                exit()
+            if back_right_radius > 0 and back_right_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here back_right_radius='+str(back_right_radius)+ 'mm')
+                exit()
+            if front_right_radius > 0 and front_right_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here front_right_radius='+str(front_right_radius)+ 'mm')
+                exit()
+            if front_left_radius > 0 and front_left_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here front_left_radius='+str(front_left_radius)+ 'mm')
+                exit()
+
         max_radius = max(back_left_radius, back_right_radius, front_right_radius, front_left_radius)
         thickness = self.unittouu(str(self.options.thickness) + unit)
         burn = self.unittouu(str(self.options.burn) + unit)
@@ -2645,7 +2657,7 @@ class GenericBox(inkex.Effect):
                             (xbox, self.front_joint, front_right_radius, self.x_joint),       #Then Front Notch Line and round corner r= front_right_radius
                             (ybox, self.right_joint, back_right_radius, self.y_joint),        #Then Right notch line and Back/Right rounded corner
                             (xbox, self.back_joint, back_left_radius, self.x_joint),          #Then Back notch line with Back/Left rounded corner
-                            (ybox, self.left_joint, 0))                         #At last, Left line without rounded corner
+                            (ybox, self.left_joint, 0, self.y_joint))                         #At last, Left line without rounded corner
                 FlexBandList.append(FlexBand)
             
         if back_left_radius == 0 and back_right_radius == 0:
