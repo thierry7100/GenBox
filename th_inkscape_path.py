@@ -13,13 +13,17 @@ objStyle = simplestyle.formatStyle(
     'fill': 'none'
     })
 
-class th_inkcape_path:
-    def __init__(self, Offset, group, Label=None):
+class th_inkscape_path:
+    def __init__(self, Offset, group, Label=None, Style = None):
         self.offsetX = Offset[0]
         self.offsetY = Offset[1]
         self.Path = ''
         self.group = group
         self.Label = Label
+        if Style:
+            self.Style = Style
+        else:
+            self.Style = objStyle
         self.xmin = -self.offsetX
         self.xmax = -self.offsetX
         self.ymin = -self.offsetY
@@ -157,9 +161,9 @@ class th_inkcape_path:
 
     def GenPath(self):
         if self.Label:
-            line_attribs = {'style': objStyle, 'id' : self.Label, 'd': self.Path}
+            line_attribs = {'style': self.Style, 'id' : self.Label, 'd': self.Path}
         else:            
-            line_attribs = {'style': objStyle, 'd': self.Path}
+            line_attribs = {'style': self.Style, 'd': self.Path}
         inkex.etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
     
     def GetBoundingBox(self):

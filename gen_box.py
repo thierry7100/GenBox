@@ -840,7 +840,7 @@ class FlexFace:
         name = FlexBandList[0]
         if isLid:
             name = 'Lid_'+name
-        self.path = th_inkcape_path(PositionInPage, InkscapeGroup, name)
+        self.path = th_inkscape_path(PositionInPage, InkscapeGroup, name)
         #Remember these 2 parameters for Side Notch lines
         self.InkscapeGroup = InkscapeGroup
         self.BaseName = FlexBandList[0]
@@ -1293,7 +1293,7 @@ class BoxFace:
         #If needed, create path which will be used to draw the face
         #The path will be in the group InkscapeGroup
         if Path == None:
-            self.path = th_inkcape_path(PositionInPage, InkscapeGroup, name)
+            self.path = th_inkscape_path(PositionInPage, InkscapeGroup, name)
             DebugMsg("Creating path("+name+") Position ="+str(PositionInPage)+'\n')
         else:
             self.path = Path
@@ -2036,7 +2036,7 @@ class GenericBox(inkex.Effect):
         StartOffset = (xOffset, yOffset)
         xOffset -= 2*thickness
 
-        path = th_inkcape_path((xOffset, yOffset), parent, 'HingeElt_'+str(idx))
+        path = th_inkscape_path((xOffset, yOffset), parent, 'HingeElt_'+str(idx))
         path.MoveTo(0, 0)
         #Start at upper right
         path.LineToVRel(thickness)
@@ -2169,7 +2169,7 @@ class GenericBox(inkex.Effect):
         This is a specific face with cuts for row walls on top
         '''
         DebugMsg("\nDrawColumWall, index="+str(index)+" n_Slot="+str(n_slot_y)+" Slot_Size="+str(y_slot_size)+" Length="+str(length)+" Height="+str(zbox)+" Offset="+str((xOffset, yOffset))+'\n')
-        path = th_inkcape_path((xOffset-thickness, yOffset), parent, 'COL_WALL_'+str(index+1))
+        path = th_inkscape_path((xOffset-thickness, yOffset), parent, 'COL_WALL_'+str(index+1))
         
         VNotchLine1 = NotchLine((length,0,1), (length, zbox, 1), math.pi/2, self.z_joint )        #Vertical Notch line
         VNotchLine2 = NotchLine((0,zbox,1), (0, 0, 1), -math.pi/2, self.z_joint )       #Vertical Notch line, reverse
@@ -2223,7 +2223,7 @@ class GenericBox(inkex.Effect):
         This is a specific face with cuts for columns walls on bottom
         '''
         DebugMsg("\nDrawRowWall, index="+str(index)+" n_Slot="+str(n_slot_x)+" Slot_Size="+str(x_slot_size)+" Length="+str(length)+" Height="+str(zbox)+" Offset="+str((xOffset, yOffset))+'\n')
-        path = th_inkcape_path((xOffset-thickness, yOffset), parent, 'ROW_WALL_'+str(index+1))
+        path = th_inkscape_path((xOffset-thickness, yOffset), parent, 'ROW_WALL_'+str(index+1))
         
         VNotchLine1 = NotchLine((length,0,1), (length, zbox, 1), math.pi/2, self.z_joint )        #Vertical Notch line
         VNotchLine2 = NotchLine((0,zbox,1), (0, 0, 1), -math.pi/2, self.z_joint )       #Vertical Notch line, reverse
@@ -2285,7 +2285,7 @@ class GenericBox(inkex.Effect):
         if FlagRight=='Right':
             name = 'Lid_Right'
         #Change offset in y direction because this one will be drawn from bottom left.
-        path = th_inkcape_path((xOffset-thickness, yOffset-zlid - z_dome_lid-thickness), parent, name)
+        path = th_inkscape_path((xOffset-thickness, yOffset-zlid - z_dome_lid-thickness), parent, name)
         #First build the notch lines for the rectangle
         VNotchLine1 = NotchLine((0,0,1), (0, -zlid, 1), -math.pi/2, self.z_joint )          #Vertical Notch line (left side)
         VNotchLine2 = NotchLine((ybox,-zlid,1), (ybox, 0, 1), math.pi/2, self.z_joint )     #Vertical Notch line, right side
@@ -2322,7 +2322,7 @@ class GenericBox(inkex.Effect):
         '''
         DebugMsg("\ndrawCoffinTop, xbox="+str(xbox)+" ybox="+str(ybox)+" zlid="+str(zlid)+" z_dome_lid="+str(z_dome_lid)+'\n')
         #Change offset in y direction because this one will be drawn from bottom left.
-        path = th_inkcape_path((xOffset, yOffset - thickness), parent, 'Coffin_Top')
+        path = th_inkscape_path((xOffset, yOffset - thickness), parent, 'Coffin_Top')
         DebugMsg("Offset ="+str((xOffset, yOffset))+" Path_Offset="+str((path.offsetX, path.offsetY))+'\n')
         #Create the ellipse object used to draw the flex
         FlexBand = Ellipse(ybox/2.0, z_dome_lid)
@@ -2552,6 +2552,12 @@ class GenericBox(inkex.Effect):
             #if the box is small with only one slot in x direction try with only one hinge
             if self.n_slot_x == 1 and self.x_slot_size < 2 * hingeWidth + 30:
                 self.HingeList.append = (0, (self.x_slot_size - hingeWidth)/2.0, (self.x_slot_size - hingeWidth)/2.0)      # One hinge, starting at the middle of slot 0 (the only one)
+            elif self.n_slot_x == 1:
+                #Two hinges symetrical from box center
+                # Exact position depend on slot width, try to place hinge at about 1/4 of the slot
+                HingePos = max(self.x_slot_size/6 -  hingeWidth/2, 2)
+                self.HingeList.append((0, HingePos, HingePos))
+                self.HingeList.append((0, self.x_slot_size - HingePos, (self.x_slot_size - HingePos - hingeWidth)))
             elif self.n_slot_x == 2:
                 #in this case place hinge in first and last slot.
                 # Exact position depend on slot width, try to place hinge at about 1/3 of the slot
