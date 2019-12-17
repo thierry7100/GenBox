@@ -581,7 +581,7 @@ class NotchLine:
                     #Move Start point
                     self.start_line_joint_x += thickness * math.cos(angle-math.pi/2)
                     self.start_line_joint_y += thickness * math.sin(angle-math.pi/2)
-                else:
+                elif (self.nb_finger_joint%2) == 0:
                     #Now number of joints is even, so switch StartStatus to have different status (Start and End), and keep End Status
                     #In this case, Start is now Internal
                     self.StartStatus = 1
@@ -717,9 +717,11 @@ class NotchLine:
         if self.StartStatus:        #internal
             AngleJoint = self.Angle - math.pi/2
             DeltaBurn = burn
+            CurState = 1
         else:
             AngleJoint = self.Angle + math.pi/2
             DeltaBurn = -burn
+            CurState = -1
         DebugMsg("drawNotchLine, Angle ="+str(round(self.Angle*180/math.pi))+" AngleJoint="+str(round(AngleJoint*180/math.pi))+'\n')
         DebugMsg("start_line_joint="+str((self.start_line_joint_x, self.start_line_joint_y))+"  JointSize="+str(self.JointSize)+" DeltaBurn="+str(DeltaBurn)+'\n')
         #First go up to start of notch line + first joint + burn correction
@@ -731,17 +733,29 @@ class NotchLine:
         while i > 0:
             #The start drawing finger joint
             path.LineToRel(thickness*math.cos(AngleJoint), thickness*math.sin(AngleJoint))
+            if self.DrawHalf != 0:
+                DebugMsg("Notch "+str(i)+" MoveRel("+str((thickness*math.cos(AngleJoint), thickness*math.sin(AngleJoint)))+')\n')
             #Compute next AngleJoint for return move if necessary
             AngleJoint = AngleJoint + math.pi
             if AngleJoint > 2*math.pi:
                 AngleJoint -= 2*math.pi         #Keep angle between 0 and 2*pi
             #idem for burn factor
             DeltaBurn = -DeltaBurn
+            CurState = -CurState
             #Then line which is JointSize long and take into account the burn factor, draw half finger joint when last of first half
             if self.DrawHalf < 0 and i == 1:
                 path.LineToRel((self.JointSize/2+DeltaBurn)*math.cos(self.Angle), (self.JointSize/2+DeltaBurn)*math.sin(self.Angle))
-            elif i > 1:     #Do not draw last segment, not necessary, will be completed by next path.LIneTo
+                DebugMsg("Notch "+str(i)+" MoveRel("+str(((self.JointSize/2+DeltaBurn)*math.cos(self.Angle), (self.JointSize/2+DeltaBurn)*math.sin(self.Angle)))+') CurState ='+str(CurState)+'\n')
+            if self.DrawHalf > 0 and i == 1 and self.StartStatus>0:
                 path.LineToRel((self.JointSize+DeltaBurn)*math.cos(self.Angle), (self.JointSize+DeltaBurn)*math.sin(self.Angle))
+                if self.DrawHalf != 0:
+                    DebugMsg("Notch "+str(i)+" MoveRel("+str(((self.JointSize+DeltaBurn)*math.cos(self.Angle), (self.JointSize+DeltaBurn)*math.sin(self.Angle)))+') CurState ='+str(CurState)+'\n')
+                if CurState > 0:        #Internal, should be external so move
+                    path.LineToRel(thickness*math.cos(AngleJoint), thickness*math.sin(AngleJoint))
+            elif i > 1:     #Do not draw last segment, not necessary, will be completed by next path.LineTo
+                path.LineToRel((self.JointSize+DeltaBurn)*math.cos(self.Angle), (self.JointSize+DeltaBurn)*math.sin(self.Angle))
+                if self.DrawHalf != 0:
+                    DebugMsg("Notch "+str(i)+" MoveRel("+str(((self.JointSize+DeltaBurn)*math.cos(self.Angle), (self.JointSize+DeltaBurn)*math.sin(self.Angle)))+') CurState ='+str(CurState)+'\n')
             i -= 1
         #Then draw last part, up to end point
         #Do not check if necessary because of burn factor, last position is not the real end of notch line.
@@ -767,11 +781,11 @@ class FlexLines:
         else:
             nSegmentFlex = Height+2*thickness // 50
         #Then compute distance between flex lines. The basic idea is to have a minimum of 15 lines per corner, with lines distant at least of 1mm
-        #But also ensure that distance between lines is at most at 2mm 
+        #But also ensure that distance between lines is at most at 1.4mm 
         round_distance = Radius*math.pi/2
         flex_line_spacing = round_distance / 14
         flex_line_spacing = max(flex_line_spacing, 1.0)
-        flex_line_spacing = min(flex_line_spacing, 1.5)
+        flex_line_spacing = min(flex_line_spacing, 1.4)
         nb_flex_lines =  int(round(round_distance / flex_line_spacing,0))
         DebugMsg("sizeround ="+str(round_distance)+" flex_line_spacing="+str(flex_line_spacing)+" nb_flex_lines="+str(nb_flex_lines)+" size="+str(nb_flex_lines*flex_line_spacing)+"\n")        
         #nb_flex_lines should be odd
@@ -1111,7 +1125,7 @@ class FlexFace:
             sizeclips = 18
         nbclips = int(zoneclips // sizeclips)
         if nbclips == 0:
-            inkex.errormsg('Box is not high enough, no rrom for clips')
+            inkex.errormsg('Box is not high enough, no room for clips')
             return
         DebugMsg("\ndrawRoundedFlexFace, sizeclips="+str(sizeclips)+" nbclips="+str(nbclips)+'\n')
         ListFlexLines = []
@@ -1121,6 +1135,7 @@ class FlexFace:
         DebugMsg("First Half notch line, size ="+str(FlexElement[0])+" Size Round BackLeft="+str(LastRadius)+" Size Round BackRight="+str(FlexElement[2])+'\n')
         #The notch line will be centered on xpos (0), so should start at -(SizeNotchLine-SizeRadius_BackLeft-SizeRadius_BackRight)/2
         First_hLine = NotchLine((-(FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), ((FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), 0.0, FlexElement[1], 1)      #Draw only second half
+        DebugMsg("First_hLine.StartStatus="+str(First_hLine.StartStatus)+'\n')
         if First_hLine.StartStatus == 0:
             self.path.MoveTo(0, -thickness)   # Start position (0, -thickness) because flex band is external in Y direction, and this side start internal in X
         else:
