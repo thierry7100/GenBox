@@ -704,7 +704,7 @@ class NotchLine:
         Draw the actual line, starting at current position of path.
         The position should be StartX, StartY, this is not checked or enforced to avoid unwanted moves
         Each finger joint is JointSize long but there is a correction to take into account the burn factor (thickness of the cutting line).
-        So each external joint is actually JointSize+2*burn long and Internal joints are JointSize-2*burn
+        So each external joint size is actually JointSize+2*burn long and Internal joints are JointSize-2*burn long
         '''
         if self.nb_finger_joint == 0:
             #Easy case, no finger joint, draw a straight line
@@ -716,11 +716,11 @@ class NotchLine:
         #If start point is internal, AngleJoint should be Angle - pi/2, else it should be Angle + pi/2
         if self.StartStatus:        #internal
             AngleJoint = self.Angle - math.pi/2
-            DeltaBurn = burn
+            DeltaBurn = -burn
             CurState = 1
         else:
             AngleJoint = self.Angle + math.pi/2
-            DeltaBurn = -burn
+            DeltaBurn = burn
             CurState = -1
         DebugMsg("drawNotchLine, Angle ="+str(round(self.Angle*180/math.pi))+" AngleJoint="+str(round(AngleJoint*180/math.pi))+'\n')
         DebugMsg("start_line_joint="+str((self.start_line_joint_x, self.start_line_joint_y))+"  JointSize="+str(self.JointSize)+" DeltaBurn="+str(DeltaBurn)+'\n')
