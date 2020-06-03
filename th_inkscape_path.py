@@ -6,12 +6,13 @@ import inkex
 
 import simplestyle
 import math
+from lxml import etree
 
-objStyle = simplestyle.formatStyle(
-    {'stroke': '#000000',
+
+objStyle = str(inkex.Style({'stroke': '#000000',
     'stroke-width': 0.1,
     'fill': 'none'
-    })
+    }))
 
 class th_inkscape_path:
     def __init__(self, Offset, group, Label=None, Style = None):
@@ -164,7 +165,7 @@ class th_inkscape_path:
             line_attribs = {'style': self.Style, 'id' : self.Label, 'd': self.Path}
         else:            
             line_attribs = {'style': self.Style, 'd': self.Path}
-        inkex.etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
+        etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
     
     def GetBoundingBox(self):
         '''
