@@ -1113,7 +1113,8 @@ class FlexFace:
             sizeclips = 18
         nbclips = int(zoneclips // sizeclips)
         if nbclips == 0:
-            inkex.errormsg('Box is not high enough, no rrom for clips')
+            inkex.errormsg('Box is not high enough, no room for clips')
+            CloseDebugFile()
             return
         DebugMsg("\ndrawRoundedFlexFace, sizeclips="+str(sizeclips)+" nbclips="+str(nbclips)+'\n')
         ListFlexLines = []
@@ -1995,10 +1996,12 @@ class GenericBox(inkex.Effect):
         x = min(xbox - back_left_radius - back_right_radius, xbox - front_right_radius - front_left_radius)
         if x < 18:
             inkex.errormsg('Error: box length too small, should be at least 18mm + round radius')
+            CloseDebugFile()
             exit()
         y = min(ybox - back_left_radius - front_left_radius, ybox - front_right_radius - back_right_radius)
         if y < 18:
             inkex.errormsg('Error: box depth too small, should be at least 18mm + round radius')
+            CloseDebugFile()
             exit()
         if x  <= 100:
             basic_size_x = 5.0
@@ -2449,9 +2452,11 @@ class GenericBox(inkex.Effect):
         
         if self.x_slot_size < 18 or self.y_slot_size < 18:
             inkex.errormsg('Error: each slot should be at least 18mm large, here x_slot_size='+str(self.x_slot_size)+ ' y_slot_size='+str(self.y_slot_size))
+            CloseDebugFile()
             exit()
         if self.x_slot_size < max_radius or self.y_slot_size < max_radius: 
             inkex.errormsg('Error: slot size should be greater than rounded corner radius, here x_slot_size='+str(self.x_slot_size)+ ' y_slot_size='+str(self.y_slot_size))
+            CloseDebugFile()
             exit()
 
                 
@@ -2498,6 +2503,7 @@ class GenericBox(inkex.Effect):
             zbox_internal_walls -= 0.2      #Indeed, reduce internal wall height to ease sliding
             if back_left_radius > 0 or back_right_radius > 0:
                 inkex.errormsg('Error: Sliding lid is incompatible with rounded corners on back')
+                CloseDebugFile()
                 exit()
             self.front_joint = 0        #No joint on front top
         
@@ -2538,10 +2544,19 @@ class GenericBox(inkex.Effect):
             hingeWidth = 5*thickness + 3*SteelHingeSpacing
             if ( hingeWidth > self.x_slot_size - 3 ):
                 inkex.errormsg('Error: no space for hinge within slots, slots should be at least '+str(hingeWidth+3)+'mm wide')
+                CloseDebugFile()
                 exit(1)
             #if the box is small with only one slot in x direction try with only one hinge
             if self.n_slot_x == 1 and self.x_slot_size < 2 * hingeWidth + 30:
-                self.HingeList.append = (0, (self.x_slot_size - hingeWidth)/2.0, (self.x_slot_size - hingeWidth)/2.0)      # One hinge, starting at the middle of slot 0 (the only one)
+                HingePos = (self.x_slot_size - hingeWidth)/2.0
+                self.HingeList.append((0, HingePos, HingePos))      # One hinge, starting at the middle of slot 0 (the only one)
+            elif self.n_slot_x == 1:
+                #One slot, but a large one. 2 hinges about 1/4 - 3/4 of the edge
+                HingePos = max(self.x_slot_size/4 -  hingeWidth/2, 2)
+                if HingePos < 10:
+                    HingePos = 10
+                self.HingeList.append((0, HingePos, HingePos))
+                self.HingeList.append((0, self.x_slot_size - HingePos, (self.x_slot_size - HingePos - hingeWidth) ))
             elif self.n_slot_x == 2:
                 #in this case place hinge in first and last slot.
                 # Exact position depend on slot width, try to place hinge at about 1/3 of the slot
@@ -2562,7 +2577,7 @@ class GenericBox(inkex.Effect):
                 self.HingeList.append((1, HingePos, self.x_slot_size + thickness + HingePos ))
                 self.HingeList.append((self.n_slot_x-2, HingePos, (self.n_slot_x-2)*(self.x_slot_size+thickness) + (self.x_slot_size - HingePos - hingeWidth)))
             DebugMsg("Lid with steel hinge\n")
-            DebugMsg("Hinge width="+str(hingeWidth)+", Hinge pos="+str(self.HingeList)+"\n")
+            DebugMsg("Hinge width="+str(hingeWidth)+", Number of hinges="+str(len(self.HingeList))+", Hinge pos="+str(self.HingeList)+"\n")
 
 
         #Draw external faces which are planes, begin with top
