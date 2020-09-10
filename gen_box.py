@@ -18,6 +18,10 @@ SteelHingeSpacing = 0.3
 RadiusSteelHingeAxis = 1.3      #Use axis about 2.4mm diameter, I use nails 2.3mmx70mm
 MinMove = 1e-2                  #Minimum distance betwwen two points (0.01 mm !)
 
+SlidingLidSpaceZ = 1.3          #Space to allow easy move of the sliding lid (z or thickness). To be multiplied by thickness
+SlidingLidSpaceX = 1.0          #Space to allow easy move in X direction/
+
+
 #Global variables used for the whole program
 thickness = 0
 burn = 0
@@ -57,6 +61,15 @@ def drawHole(path, x0, y0, dx, dy, burn):
     path.LineToHRel(dx-burn)
     path.LineToVRel(-dy+burn)
     path.LineToHRel(-dx+burn)
+
+#   Generate vertical lines for flex
+#   Parameters : StartX, StartY, size, nunmber of lines and +1 if lines goes up and -1 down
+def GenLinesFlex(StartX, StartY, Size, nLine, UpDown, path):
+    DebugMsg("Enter GenLinesFlex, Pos="+str((StartX, StartY))+" nSegment="+str(nLine)+" Size Segment="+str(Size)+" UpDown="+str(UpDown)+" End="+str((StartX, StartY+nLine*(Size+2)-2))+'\n')
+    for i in range(nLine):
+        path.Line(StartX, StartY, StartX, StartY + UpDown*Size)
+        DebugMsg("GenLinesFlex from "+str((StartX, StartY))+" to "+str((StartX, StartY + UpDown*Size))+'\n')
+        StartY += UpDown*(Size+2)
 
 
 class Ellipse:
@@ -226,14 +239,6 @@ class Ellipse:
         path.LineTo(x,y)
         #We should be arrived at the last point now !
     
-    #   Generate vertical lines for flex
-    #   Parameters : StartX, StartY, size, nunmber of lines and +1 if lines goes up and -1 down
-    def GenLinesFlex(self, StartX, StartY, Size, nLine, UpDown, path):
-        DebugMsg("Enter GenLinesFlex, Pos="+str((StartX, StartY))+" nSegment="+str(nLine)+" Size Segment="+str(Size)+" UpDown="+str(UpDown)+" End="+str((StartX, StartY+nLine*(Size+2)-2))+'\n')
-        for i in range(nLine):
-            path.Line(StartX, StartY, StartX, StartY + UpDown*Size)
-            DebugMsg("GenLinesFlex from "+str((StartX, StartY))+" to "+str((StartX, StartY + UpDown*Size))+'\n')
-            StartY += UpDown*(Size+2)
     
     def drawFlexEllipse(self, path, height, SkipFlex, Position):
         '''
@@ -294,29 +299,29 @@ class Ellipse:
             '''
             DebugMsg("Notch("+str(i)+"), SkipFlex="+str(SkipFlex)+" ListDistance[i]="+str(ListDistance[i])+'\n')
             #Draw the edge line from Top to Bottom
-            self.GenLinesFlex(xpos, ypos, ShortMark, 1, 1, path)
+            GenLinesFlex(xpos, ypos, ShortMark, 1, 1, path)
             #Then nMark-1 long Lines
-            self.GenLinesFlex(xpos, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
+            GenLinesFlex(xpos, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
             #And the last short line
-            self.GenLinesFlex(xpos, ypos+TotalHeight-ShortMark, ShortMark, 1, 1, path)
+            GenLinesFlex(xpos, ypos+TotalHeight-ShortMark, ShortMark, 1, 1, path)
             #Now we are at the bottom of the Flex face, draw the bottom notch
             path.Line(xpos, ypos+height+thickness, xpos+self.size_Ellipse_Notch, ypos+height+thickness)
             #Then draw the same pattern for the other side of the notch, but bottom to top
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight, ShortMark, 1, -1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight, ShortMark, 1, -1, path)
             #Then nMark-1 long Lines
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight-ShortMark-2, LongMark, nMark-1, -1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight-ShortMark-2, LongMark, nMark-1, -1, path)
             #And the last short line that will reach the top external edge
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+ShortMark, ShortMark, 1, -1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+ShortMark, ShortMark, 1, -1, path)
             #then the top notch
             path.Line(xpos+self.size_Ellipse_Notch, ypos + thickness, xpos, ypos+thickness)
             #Then draw the long lines inside the notch, first and last will be shorter by thickness
             #This line is drawn from top to bottom, and start at 1mm from the interior of the notch 
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+thickness+1, LongMark-thickness, 1, 1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+thickness+1, LongMark-thickness, 1, 1, path)
             #Then the remaining inside if any
             if nMark > 2:
-                self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+3+LongMark, LongMark, nMark-2, 1, path)
+                GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+3+LongMark, LongMark, nMark-2, 1, path)
             #Then the last one, shorter also, will reach internal bottom + 1mm
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+TotalHeight-LongMark-1, LongMark-thickness, 1, 1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+TotalHeight-LongMark-1, LongMark-thickness, 1, 1, path)
             '''
             At this point we are near the bottom line.
             First draw the external line up to the next notch
@@ -339,14 +344,14 @@ class Ellipse:
                 if j == 2*self.l_between_notches-2 or drawAllLines:
                     if (j % 2)==0:
                         #even, draw long lines bottom to top
-                        self.GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+TotalHeight-1, LongMark, nMark, -1, path)
+                        GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+TotalHeight-1, LongMark, nMark, -1, path)
                     else:
                         #Odd, draw short line, nMark-2 long lines then a short line, top to bottom
-                        self.GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+1, ShortMark-1, 1, 1, path)
+                        GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+1, ShortMark-1, 1, 1, path)
                         #Then nMark-1 long Lines
-                        self.GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
+                        GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
                         #And the last short line
-                        self.GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+TotalHeight-ShortMark, ShortMark-1, 1, 1, path)
+                        GenLinesFlex(xpos+(j+1)*self.size_Ellipse_Notch/2, ypos+TotalHeight-ShortMark, ShortMark-1, 1, 1, path)
             #Now we are near the top line, draw the line up to the next notch
             path.Line(xpos, ypos, xpos+self.Size_betweenNotches, ypos)
             #And we are ready to draw the next flex pattern
@@ -356,29 +361,29 @@ class Ellipse:
         Now draw the pattern for the last notch
         '''
         #Draw the edge line from Top to Bottom
-        self.GenLinesFlex(xpos, ypos, ShortMark, 1, 1, path)
+        GenLinesFlex(xpos, ypos, ShortMark, 1, 1, path)
         #Then nMark-1 long Lines
-        self.GenLinesFlex(xpos, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
+        GenLinesFlex(xpos, ypos+ShortMark+2, LongMark, nMark-1, 1, path)
         #And the last short line
-        self.GenLinesFlex(xpos, ypos+TotalHeight-ShortMark, ShortMark, 1, 1, path)
+        GenLinesFlex(xpos, ypos+TotalHeight-ShortMark, ShortMark, 1, 1, path)
         #Now we are at the bottom of the Flex face, draw the bottom notch
         path.Line(xpos, ypos+height+thickness, xpos+self.size_Ellipse_Notch, ypos+height+thickness)
         #Then draw the same pattern for the other side of the notch, but bottom to top
-        self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight, ShortMark, 1, -1, path)
+        GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight, ShortMark, 1, -1, path)
         #Then nMark-1 long Lines
-        self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight-ShortMark-2, LongMark, nMark-1, -1, path)
+        GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+TotalHeight-ShortMark-2, LongMark, nMark-1, -1, path)
         #And the last short line that will reach the top external edge
-        self.GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+ShortMark, ShortMark, 1, -1, path)
+        GenLinesFlex(xpos+self.size_Ellipse_Notch, ypos+ShortMark, ShortMark, 1, -1, path)
         #then the top notch
         path.Line(xpos+self.size_Ellipse_Notch, ypos + thickness, xpos, ypos+thickness)
         #Then draw the long lines inside the notch, first and last will be shorter by thickness
         #This line is drawn from top to bottom, and start at 1mm from the interior of the notch 
-        self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+thickness+1, LongMark-thickness, 1, 1, path)
+        GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+thickness+1, LongMark-thickness, 1, 1, path)
         #Then the remaining inside if any
         if nMark > 2:
-            self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+3+LongMark, LongMark, nMark-2, 1, path)
+            GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+3+LongMark, LongMark, nMark-2, 1, path)
         #Then the last one, shorter also, will reach internal bottom + 1mm
-        self.GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+TotalHeight-LongMark-1, LongMark-thickness, 1, 1, path)
+        GenLinesFlex(xpos+self.size_Ellipse_Notch/2, ypos+TotalHeight-LongMark-1, LongMark-thickness, 1, 1, path)
         xpos += self.size_Ellipse_Notch     #xpos is the other side of the notch
         path.MoveTo(xpos, ypos+TotalHeight)      #Path will be at the end of flex line on the BOTTOM edge. 
         DebugMsg("Path pos ="+str((xpos, ypos+TotalHeight))+'\n')
@@ -396,37 +401,40 @@ class CornerPoint:
             self.radius = radius
         else:
             self.radius = 0
-        #Compute position of circle center, do it now because it is always here, even if corner moves (internal/external)
+        #Compute position of circle center and corner according to corner quadrant and internal / external flags
         if  position[0]  <= thickness:
             #Left corner        
-            self.xc = position[0] + self.radius
+            if x_internal:
+                self.xc = position[0] + self.radius
+                self.x_corner = position[0]
+            else:
+                self.xc = position[0] + self.radius - thickness
+                self.x_corner = position[0] - thickness
         else:
             #Right corner        
-            self.xc = position[0] - self.radius
+            if x_internal:
+                self.xc = position[0] - self.radius
+                self.x_corner = position[0]
+            else:
+                self.xc = position[0] - self.radius + thickness
+                self.x_corner = position[0] + thickness
         if  position[1]  <= thickness:
             #Top corner        
-            self.yc = position[1] + self.radius
+            if y_internal:
+                self.yc = position[1] + self.radius
+                self.y_corner = position[1] 
+            else:
+                self.yc = position[1] + self.radius - thickness
+                self.y_corner = position[1] - thickness
         else:
             #Bottom corner        
-            self.yc = position[1] - self.radius
+            if y_internal:
+                self.yc = position[1] - self.radius
+                self.y_corner = position[1] 
+            else:
+                self.yc = position[1] - self.radius + thickness
+                self.y_corner = position[1] + thickness
 
-        #Compute position of corner, given internal or external position of finger joints
-        if x_internal:
-            self.x_corner = position[0]
-        elif position[0] <= thickness:
-            self.x_corner = position[0] - thickness
-            if self.radius > 0:
-                self.radius += thickness            # Change radius accordingly, beware do it only for x direction (only once !)
-        else:
-            self.x_corner = position[0] + thickness
-            if self.radius > 0:
-                self.radius += thickness
-        if y_internal:
-            self.y_corner = position[1] 
-        elif position[1] <= thickness:
-            self.y_corner = position[1] - thickness
-        else:
-            self.y_corner = position[1] + thickness
         #Compute position of line of finger joints
         if position[0]  <= thickness and position[1]  <= thickness:
             #Top left corner, compute positions of start/end of corners
@@ -464,7 +472,7 @@ class CornerPoint:
             elif self.quadrant == 1:
                 self.x_end_joint = self.x_corner - WoodHingeSize*thickness
                 self.y_start_joint = self.y_corner + WoodHingeSize*thickness
-        DebugMsg("End CornerPoint init. Corner="+str((self.x_corner, self.y_corner))+" Circle="+str((self.xc, self.yc))+" StartJoint="+str((self.x_start_joint, self.y_start_joint))+" EndJoint="+str((self.x_end_joint, self.y_end_joint))+" WoodHingeCorner="+str(self.WoodHingeCorner)+'\n')
+        DebugMsg("End CornerPoint init. Corner="+str((self.x_corner, self.y_corner))+" Circle="+str((self.xc, self.yc, self.radius))+" StartJoint="+str((self.x_start_joint, self.y_start_joint))+" EndJoint="+str((self.x_end_joint, self.y_end_joint))+" WoodHingeCorner="+str(self.WoodHingeCorner)+'\n')
     
     def drawCorner(self, path):
         '''
@@ -472,6 +480,7 @@ class CornerPoint:
         Start position of the path should be (x_end_joint, y_end_joint), not checked nor enforced
         End Position is (x_start_joint, y_start_joint)
         '''
+        DebugMsg("Start drawCorner PathPos ="+str((path.x_noff, path.y_noff))+'\n')
         if self.WoodHingeCorner:
             #Specific case, draw 3/4 of a circle of radius WoodHingeSize*thickness + plus a small segment of size thickness
             if self.quadrant == 0:      #Left corner
@@ -488,8 +497,52 @@ class CornerPoint:
                 path.drawQuarterCircle(self.x_corner+thickness, self.y_corner, WoodHingeSize*thickness, 2)        #Start Lower Right
                 path.LineToHRel(-thickness)
         elif self.radius > 0:
-            #DebugMsg("drawCorner radius Center"+str((self.xc, self.yc))+" RAdius="+str(self.radius)+ " quadrant="+str(self.quadrant)+'\n')
-            path.drawQuarterCircle(self.xc, self.yc, self.radius, self.quadrant)
+            nxc = self.xc
+            nyc = self.yc
+            if self.quadrant == 0:
+                #if needed, draw vertical line to cope with external corner
+                if self.y_internal == 0:
+                    path.LineToVRel(-thickness)
+                    DebugMsg("drawCorner, move dY="+str(-thickness)+"\n")
+            elif self.quadrant == 1:
+                #if needed, draw horizontal line to cope with external corner
+                if self.x_internal == 0:
+                    path.LineToHRel(thickness)
+                    DebugMsg("drawCorner, move dX="+str(thickness)+"\n")
+            elif self.quadrant == 2:
+                #if needed, draw vertical line to cope with external corner
+                if self.y_internal == 0:
+                    path.LineToVRel(thickness)
+                    DebugMsg("drawCorner, move dY="+str(thickness)+"\n")
+            elif self.quadrant == 3:
+                #if needed, draw horizontal line to cope with external corner
+                if self.x_internal == 0:
+                    path.LineToHRel(-thickness)
+                    DebugMsg("drawCorner, move dX="+str(-thickness)+"\n")
+            DebugMsg("drawCorner before circle PathPos ="+str((path.x_noff, path.y_noff))+'\n')
+            DebugMsg("drawCorner radius Center"+str((nxc, nyc))+" Radius="+str(self.radius)+ " quadrant="+str(self.quadrant)+'\n')
+            path.drawQuarterCircle(nxc, nyc, self.radius, self.quadrant)
+            DebugMsg("drawCorner after circle PathPos ="+str((path.x_noff, path.y_noff))+'\n')
+            if self.quadrant == 0:
+                #if needed, draw H line to cope with external corner
+                if self.x_internal == 0:
+                    path.LineToHRel(thickness)
+                    DebugMsg("drawCorner, move dX="+str(thickness)+"\n")
+            elif self.quadrant == 1:
+                #if needed, draw V line to cope with external corner
+                if self.y_internal == 0:
+                    path.LineToVRel(thickness)
+                    DebugMsg("drawCorner, move dY="+str(thickness)+"\n")
+            elif self.quadrant == 2:
+                #if needed, draw H line to cope with external corner
+                if self.x_internal == 0:
+                    path.LineToHRel(-thickness)
+                    DebugMsg("drawCorner, move dX="+str(-thickness)+"\n")
+            elif self.quadrant == 3:
+                #if needed, draw V line to cope with external corner
+                if self.y_internal == 0:
+                    path.LineToVRel(-thickness)
+                    DebugMsg("drawCorner, move dY="+str(-thickness)+"\n")
         else:
             DebugMsg("drawCorner: StartPoint="+str((self.x_end_joint, self.y_end_joint))+" Corner="+str((self.x_corner, self.y_corner))+ " EndPoint="+str((self.x_start_joint, self.y_start_joint))+'\n')
             if distance2Points(self.x_end_joint, self.y_end_joint, self.x_corner, self.y_corner) > MinMove:
@@ -498,6 +551,8 @@ class CornerPoint:
             if distance2Points(self.x_start_joint, self.y_start_joint, self.x_corner, self.y_corner) > MinMove:
                 #Draw line between corner and start of joints
                 path.LineTo(self.x_start_joint, self.y_start_joint)
+        DebugMsg("End drawCorner PathPos ="+str((path.x_noff, path.y_noff))+'\n')
+
 
 
 class NotchLine:
@@ -718,10 +773,10 @@ class NotchLine:
         #If start point is internal, AngleJoint should be Angle - pi/2, else it should be Angle + pi/2
         if self.StartStatus:        #internal
             AngleJoint = self.Angle - math.pi/2
-            DeltaBurn = burn
+            DeltaBurn = -burn
         else:
             AngleJoint = self.Angle + math.pi/2
-            DeltaBurn = -burn
+            DeltaBurn = burn
         DebugMsg("drawNotchLine, Angle ="+str(round(self.Angle*180/math.pi))+" AngleJoint="+str(round(AngleJoint*180/math.pi))+'\n')
         DebugMsg("start_line_joint="+str((self.start_line_joint_x, self.start_line_joint_y))+"  JointSize="+str(self.JointSize)+" DeltaBurn="+str(DeltaBurn)+'\n')
         #First go up to start of notch line + first joint + burn correction
@@ -1358,7 +1413,7 @@ class BoxFace:
         #DebugMsg("Bottom Edge, PathPos ="+str((self.path.x, self.path.y))+" Bounding Box="+str(self.path.GetBoundingBox())+'\n')
         #Bottom left corner
         self.bottom_left_corner.drawCorner(self.path)
-        #DebugMsg("Bottom Left corner, PathPos ="+str((self.path.x, self.path.y))+" Bounding Box="+str(self.path.GetBoundingBox())+'\n')
+        DebugMsg("Bottom Left corner, PathPos ="+str((self.path.x, self.path.y))+" Bounding Box="+str(self.path.GetBoundingBox())+'\n')
         #Left edge
         self.LeftLine.drawNotchLine(self.path)
         #DebugMsg("Left Edge, PathPos ="+str((self.path.x, self.path.y))+" Bounding Box="+str(self.path.GetBoundingBox())+'\n')
@@ -1474,6 +1529,159 @@ class BoxFace:
             self.path.Close()
             self.path.GenPath()  
     
+    def drawFaceInternalSlidingLeft(self, ClosePath):
+        '''
+        Draw specific pattern helping the sliding of the lid inside the box
+        '''
+        radius_back = self.top_left_corner.radius
+        # Go To starting point (top left)
+        self.path.MoveTo(self.top_left_corner.x_corner, self.top_left_corner.y_corner+thickness)
+        DebugMsg("drawFaceInternalSlidingLeft, top left start in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then draw the small quarter of circle
+        self.path.LineToVRel(radius_back)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        self.path.drawQuarterCircle(self.top_left_corner.x_corner+radius_back, self.top_left_corner.y_corner+radius_back+thickness, radius_back, 0)
+        DebugMsg("drawFaceInternalSlidingLeft, after circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        self.path.LineToHRel(-radius_back)
+        DebugMsg("drawFaceInternalSlidingLeft, End of top left circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        
+
+        #Then restart path at bottom right
+        self.path.MoveTo(self.bottom_right_corner.x_end_joint, self.bottom_right_corner.y_end_joint)
+        DebugMsg("drawFaceInternalSlidingLeft, start in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the horizontal line towards left corner
+        self.path.LineTo(self.bottom_left_corner.x_end_joint+SlidingLidSpaceZ*thickness, self.bottom_left_corner.y_end_joint)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the vertical left line towards rounded back
+        #Change left line 
+        x = self.path.x_noff
+        self.LeftLine = NotchLine((x, self.bottom_left_corner.y_start_joint, 0), (x, self.top_left_corner.y_end_joint+SlidingLidSpaceZ*thickness, 0), -math.pi/2, self.LeftLine.JointSize) 
+        self.LeftLine.drawNotchLine(self.path)
+        x = self.top_left_corner.x_end_joint+SlidingLidSpaceZ*thickness
+        y = self.top_left_corner.y_end_joint+SlidingLidSpaceZ*thickness
+        DebugMsg("drawFaceInternalSlidingLeft, after notches in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the quarter circle (quadrant 0)
+        self.path.drawQuarterCircle(x+radius_back, y, radius_back, 0)
+        DebugMsg("drawFaceInternalSlidingLeft, after first circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then the horizontal line towards the large circle
+        x = self.top_right_corner.x_end_joint - (SlidingLidSpaceZ+1)*thickness
+        y = self.path.y_noff
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #then large circle (Quadrant 1)
+        radius = self.top_right_corner.radius
+        y_end = min(self.top_right_corner.y_start_joint, self.bottom_right_corner.y_end_joint - thickness)
+        self.path.Bezier(x+radius*0.551916, y, x + radius, y+radius*(1-0.551916), x+radius, y_end)  
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then V Line up to bottom
+        self.path.LineTo(self.bottom_right_corner.x_end_joint- (SlidingLidSpaceZ+1)*thickness, self.bottom_right_corner.y_end_joint - thickness)
+        DebugMsg("drawFaceInternalSlidingLeft, After V Line now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then H line 
+        x = self.bottom_right_corner.x_end_joint -  thickness
+        y = self.bottom_right_corner.y_end_joint -  thickness     
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then V Line
+        self.path.LineTo(x, y_end)
+        #Then large circle, first quadrant but reverse drawing
+        self.path.Bezier(x, y_end - radius*0.551916, x - radius*0.551916, y_end-radius, x-radius+thickness, y_end-radius)  # upper right quarter
+        DebugMsg("drawFaceInternalSlidingLeft, After circle 2 in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then V line
+        self.path.LineToVRel(-thickness)
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #And last large circle
+        x = self.path.x_noff
+        y = self.path.y_noff
+        self.path.Bezier(x+radius*0.551916, y, self.bottom_right_corner.x_end_joint, y+radius*(1-0.551916), self.bottom_right_corner.x_end_joint, self.top_right_corner.y_start_joint-thickness)  
+        DebugMsg("drawFaceInternalSlidingLeft, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+
+        #Get bounding box of path
+        self.BoundingBox = (self.path.xmin, self.path.ymin, self.path.xmax, self.path.ymax)
+
+        #Close the path if asked
+        if ClosePath:
+            self.path.Close()
+            self.path.GenPath()  
+        
+    def drawFaceInternalSlidingRight(self, ClosePath):
+        '''
+        Draw specific pattern helping the sliding of the lid inside the box
+        '''
+        radius_back = self.top_right_corner.radius
+        # Go To starting point (top Right)
+        self.path.MoveTo(self.top_right_corner.x_corner, self.top_right_corner.y_corner+thickness)
+        DebugMsg("drawFaceInternalSlidingRight, top right start in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then draw the small quarter of circle
+        self.path.LineToHRel(-radius_back)
+        DebugMsg("drawFaceInternalSlidingRight, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        self.path.drawQuarterCircle(self.top_right_corner.x_corner-radius_back, self.top_right_corner.y_corner+radius_back+thickness, radius_back, 1)
+        DebugMsg("drawFaceInternalSlidingRight, after circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        self.path.LineToVRel(-radius_back)
+        DebugMsg("drawFaceInternalSlidingRight, End of top right circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        
+
+        #Then restart path at bottom left
+        self.path.MoveTo(self.bottom_left_corner.x_end_joint, self.bottom_left_corner.y_end_joint)
+        DebugMsg("drawFaceInternalSlidingRight, start in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the horizontal line towards right corner
+        self.path.LineTo(self.bottom_right_corner.x_end_joint-SlidingLidSpaceZ*thickness, self.bottom_right_corner.y_end_joint)
+        DebugMsg("drawFaceInternalSlidingRight, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the vertical Right line towards rounded back
+        #Change right line 
+        x = self.path.x_noff   
+        self.RightLine = NotchLine((x, self.bottom_right_corner.y_start_joint, 1), (x, self.top_right_corner.y_start_joint+SlidingLidSpaceZ*thickness, 1), -math.pi/2, self.RightLine.JointSize) 
+        self.RightLine.drawNotchLine(self.path)
+        DebugMsg("drawFaceInternalSlidingRight, after notches in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        y = self.top_right_corner.y_start_joint+SlidingLidSpaceZ*thickness
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingRight, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Draw the quarter circle, use bezier instead of drawCircle because reverse draw
+        self.path.Bezier(x, y - radius_back*0.551916, x - radius_back*(1-0.551916), y-radius_back, x-radius_back, y-radius_back)
+        DebugMsg("drawFaceInternalSlidingRight, after first circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then the horizontal line towards the large circle
+        x = self.top_left_corner.x_start_joint + (SlidingLidSpaceZ+1)*thickness
+        y = self.path.y_noff
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingRight, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #then large circle (Quadrant 0)
+        radius = self.top_left_corner.radius
+        y_end = min(self.top_left_corner.y_end_joint, self.bottom_left_corner.y_end_joint -  thickness)
+        self.path.Bezier(x-radius*0.551916, y, x - radius, y+radius*(1-0.551916), x-radius, y_end) 
+        x = x-radius
+        DebugMsg("drawFaceInternalSlidingRight, after circle 1 in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then V Line up to bottom
+        self.path.LineTo(x, self.bottom_left_corner.y_end_joint - thickness)
+        DebugMsg("drawFaceInternalSlidingLeft, After V Line now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then H line 
+        x = self.bottom_left_corner.x_end_joint +  thickness
+        y = self.bottom_left_corner.y_end_joint -  thickness     
+        self.path.LineTo(x, y)
+        DebugMsg("drawFaceInternalSlidingRight, now in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then Up yo y_end
+        self.path.LineTo(x, y_end)
+        #Then large circle, first quadrant
+        self.path.Bezier(x, y_end - radius*0.551916, x + radius*0.551916, y_end-radius, x+radius-thickness, y_end-radius)
+        DebugMsg("drawFaceInternalSlidingRight, Circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then V line
+        self.path.LineToVRel(-thickness)
+        DebugMsg("drawFaceInternalSlidingRight, VLine in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #And last large circle
+        x = self.path.x_noff
+        y = self.path.y_noff
+        self.path.Bezier(x-radius*0.551916, y, self.bottom_left_corner.x_end_joint, y+radius*(1-0.551916), self.bottom_left_corner.x_end_joint, self.top_left_corner.y_end_joint-thickness)  
+        DebugMsg("drawFaceInternalSlidingRight, Circle in "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        #Then Last line
+        self.path.LineTo(self.bottom_left_corner.x_end_joint, self.bottom_left_corner.y_end_joint)
+        #Get bounding box of path
+        self.BoundingBox = (self.path.xmin, self.path.ymin, self.path.xmax, self.path.ymax)
+
+        #Close the path if asked
+        if ClosePath:
+            self.path.Close()
+            self.path.GenPath()  
+
     def drawSideLineNotches(self, xpos, ypos):
         '''
         Draw the side line notches used with sliding lid. These lines are on left and right lines
@@ -1887,6 +2095,10 @@ class GenericBox(inkex.Effect):
           type = inkex.Boolean, dest = 'SkipFlexLines', default = 'true',
           help = 'Skip flex lines when possible')
 
+        self.arg_parser.add_argument('--radius_lid', action = 'store',
+          type = float, dest = 'radius_lid', default = '50.0',
+          help = 'Radius of rounded lid')
+
         self.arg_parser.add_argument('--burn', action = 'store',
           type = float, dest = 'burn', default = '0.1',
           help = 'laser burn size')
@@ -2075,11 +2287,11 @@ class GenericBox(inkex.Effect):
         '''
         Draw the top of the box. It depends on the lid style
         '''
-        if self.options.lid_type == 'Without':
+        if self.options.lid_type == 'Without' or self.options.lid_type == 'Coffin':
             return      # Nothing in this case
         if self.options.lid_type == 'Sliding':
             #Specific case, top is a rectangle which is xbox long and ybox  wide with finger joints on top
-            #Not compatible with rounded cornerson back, so radius is set to 0
+            #Not compatible with rounded corners on back, so radius is set to 0
             #On top, corner are internal on x and external on y
             #Position is set at 0,0 (first element)
             #There is also a line of finger joints which is xbox long and thickness wide, begin with this one
@@ -2104,35 +2316,53 @@ class GenericBox(inkex.Effect):
             Top.drawSimpleFace(True)
             self.UpdateBoundingBox(Top)
             return
-        if self.options.lid_type != 'Coffin':
-            #For all cases except coffin, draw a rounded rectangle with internal corners
-            Top = BoxFace('Lid_Top', CornerPoint((0,0), back_left_radius, 1, 1), 
-                          self.x_joint, CornerPoint((xbox,0), back_right_radius, 1, 1), 
-                          self.y_joint, CornerPoint((xbox,ybox), front_right_radius, 1, 1),
-                          self.x_joint, CornerPoint((0,ybox), front_left_radius, 1, 1),
-                          self.y_joint, self.group, [0.0, 0.0])
-            Top.drawSimpleFace(False)
-            if self.options.lid_type == 'Simple':
-                #Add a hole in the top, which the same rounded rectangle, but with thickness less in each direction 
-                TopHole = BoxFace('Lid_Int', CornerPoint((thickness,thickness), back_left_radius-thickness, 1, 1), 
-                              0, CornerPoint((xbox-thickness,thickness), back_right_radius-thickness, 1, 1), 
-                              0, CornerPoint((xbox-thickness,ybox-thickness), front_right_radius-thickness, 1, 1),
-                              0, CornerPoint((thickness,ybox-thickness), front_left_radius-thickness, 1, 1),
-                              0, self.group, [0.0, 0.0], Top.path)
-                TopHole.drawSimpleFace(False)
-            Top.Close()     #Close and generate path (both if simple lid)
+        if self.options.lid_type == 'SlidingRounded':
+            #Specific case, top is a rectangle which is xbox long and ytop_sliding_rounded  wide with finger joints on 3 edges
+            #The rectangle is a little bit bigger than thickness to allow easy handling.
+            TopLine = BoxFace('Lid_Joints', CornerPoint((thickness,0), 0, 1, 1), 
+                          0, CornerPoint((xbox-thickness-SlidingLidSpaceX,0), 0, 1, 1), 
+                          0, CornerPoint((xbox-thickness-SlidingLidSpaceX,thickness*1.5), 0, 1, 1),
+                          self.x_joint, CornerPoint((thickness,thickness*1.5), 0, 1, 1),
+                          0, self.group, [0.0,0.0])
+            TopLine.drawSimpleFace(True)
+            self.UpdateBoundingBox(TopLine)
+            Top = BoxFace('Top', CornerPoint((0,0), 0, 1, 1), 
+                          self.x_joint, CornerPoint((xbox,0), 0, 1, 1), 
+                          self.y_joint, CornerPoint((xbox, self.ytop_sliding_rounded), 0, 1, 1),
+                          0, CornerPoint((0, self.ytop_sliding_rounded), 0, 1, 1),
+                          self.y_joint, self.group,  [-thickness,-self.BoundingBox[3]])
+            Top.drawSimpleFace(True)
             self.UpdateBoundingBox(Top)
-            if self.options.lid_type == 'Simple':
-                #In this case, draw a simple face without notches, external at all corners in both directions
-                Top = BoxFace('Lid', CornerPoint((0,0), back_left_radius, 0, 0), 
-                              0, CornerPoint((xbox,0), back_right_radius, 0, 0), 
-                              0, CornerPoint((xbox,ybox), front_right_radius, 0, 0),
-                              0, CornerPoint((0,ybox), front_left_radius, 0, 0),
-                              0, self.group, [-self.BoundingBox[2]-thickness-2, 0.0])
-                Top.drawSimpleFace(True)
-                self.UpdateBoundingBox(Top)
-
             return
+            
+        #For all cases except coffin, draw a rounded rectangle with internal corners
+        Top = BoxFace('Lid_Top', CornerPoint((0,0), back_left_radius, 1, 1), 
+                      self.x_joint, CornerPoint((xbox,0), back_right_radius, 1, 1), 
+                      self.y_joint, CornerPoint((xbox,ybox), front_right_radius, 1, 1),
+                      self.x_joint, CornerPoint((0,ybox), front_left_radius, 1, 1),
+                      self.y_joint, self.group, [0.0, 0.0])
+        Top.drawSimpleFace(False)
+        if self.options.lid_type == 'Simple':
+            #Add a hole in the top, which the same rounded rectangle, but with thickness less in each direction 
+            TopHole = BoxFace('Lid_Int', CornerPoint((thickness,thickness), back_left_radius-thickness, 1, 1), 
+                          0, CornerPoint((xbox-thickness,thickness), back_right_radius-thickness, 1, 1), 
+                          0, CornerPoint((xbox-thickness,ybox-thickness), front_right_radius-thickness, 1, 1),
+                          0, CornerPoint((thickness,ybox-thickness), front_left_radius-thickness, 1, 1),
+                          0, self.group, [0.0, 0.0], Top.path)
+            TopHole.drawSimpleFace(False)
+        Top.Close()     #Close and generate path (both if simple lid)
+        self.UpdateBoundingBox(Top)
+        if self.options.lid_type == 'Simple':
+            #In this case, draw a simple face without notches, external at all corners in both directions
+            Top = BoxFace('Lid', CornerPoint((0,0), back_left_radius, 0, 0), 
+                          0, CornerPoint((xbox,0), back_right_radius, 0, 0), 
+                          0, CornerPoint((xbox,ybox), front_right_radius, 0, 0),
+                          0, CornerPoint((0,ybox), front_left_radius, 0, 0),
+                          0, self.group, [-self.BoundingBox[2]-thickness-2, 0.0])
+            Top.drawSimpleFace(True)
+            self.UpdateBoundingBox(Top)
+
+        return
 
     def BuildBottom(self, xbox, ybox, back_left_radius, back_right_radius, front_right_radius, front_left_radius):
         '''
@@ -2140,7 +2370,15 @@ class GenericBox(inkex.Effect):
         Also draw the holes used to secure the internal walls
         Should exchange left and right from top to draw the external face
         '''
-        Bottom = BoxFace('Bottom', CornerPoint((0,0), back_right_radius, 1, 1), 
+        if self.options.lid_type == 'SlidingRounded':
+            Bottom = BoxFace('Bottom', CornerPoint((0,0), back_right_radius, 1, 1), 
+                      self.x_joint, CornerPoint((xbox,0), back_left_radius, 1, 1), 
+                      self.y_joint, CornerPoint((xbox,ybox), front_left_radius, 1, 1),
+                      0, CornerPoint((0,ybox), front_right_radius, 1, 1),
+                      self.y_joint, self.group, [-self.BoundingBox[2], 0.0])            #Draw it right of top, same Y
+
+        else:
+            Bottom = BoxFace('Bottom', CornerPoint((0,0), back_right_radius, 1, 1), 
                       self.x_joint, CornerPoint((xbox,0), back_left_radius, 1, 1), 
                       self.y_joint, CornerPoint((xbox,ybox), front_left_radius, 1, 1),
                       self.x_joint, CornerPoint((0,ybox), front_right_radius, 1, 1),
@@ -2399,7 +2637,76 @@ class GenericBox(inkex.Effect):
         if  path.ymax > self.BoundingBox[3] - 2:
             self.BoundingBox[3] =  path.ymax + 2
         path.GenPath()
+
+    def drawRoundedSlidindLid(self, w_lid, l_lid, xOffset, yOffset, parent):
+        ''' 
+        Draw the rounded sliding lid.
+        This is a rectangle made of flex which is w_lid wide and l_lid long.
+        There are notches on one width long edge, but not on the other edges
+        '''
+        DebugMsg("\ndrawRoundedSlidindLid, w_lid="+str(w_lid)+" l_lid="+str(l_lid)+'\n')
+        #Change offset in y direction because this one will be drawn from bottom left.
+        path = th_inkscape_path((xOffset, yOffset - thickness), parent, 'Sliding_Top')
+        DebugMsg("Offset ="+str((xOffset, yOffset))+" Path_Offset="+str((path.offsetX, path.offsetY))+'\n')
+
+        #First build the notch line for the rectangle
+        NotchLine1 = NotchLine((0, w_lid-thickness, 0), (0, thickness, 0), -math.pi/2, self.z_joint )     #Vertical Notch line, left edge, external
+        #Then draw the rectangle
+        path.MoveTo(0, w_lid-thickness)
+        NotchLine1.drawNotchLine(path)
+        DebugMsg("After Notches pos="+str((path.x_noff, path.y_noff))+'\n')
+        path.LineToHRel(thickness)
+        path.LineToVRel(-thickness)
+        #Then the top H Line
+        path.LineTo(l_lid, 0)
+        #Then V Line
+        path.LineToVRel(w_lid)
+        #Then last H line
+        path.LineTo(thickness, w_lid)
+        path.LineToVRel(-thickness)
+        path.LineTo(0, w_lid-thickness)
         
+        #Now draw flex lines, first compute flex parameters
+        nLines = int(l_lid - thickness) - 1              #One mm free at each end
+        delta_x =  (l_lid - thickness - 1)/nLines
+        TotalHeight = w_lid
+        nMark = int( TotalHeight / 50) + 1              #Compute number of lines
+        nMark = max(nMark, 2)   # At least 2 marks
+        #Sizes of short and long lines to make flex
+        LongMark = (TotalHeight / nMark) - 2.0          #Long Mark equally divide the height
+        ShortMark = LongMark/2                          # And short mark should lay at center of long marks
+        DebugMsg("\ndrawRoundedSlidindLid, nLines="+str(nLines)+" TotalHeight="+str(TotalHeight)+" nMark="+str(nMark)+" LongMark="+str(LongMark)+" ShortMark="+str(ShortMark)+'\n')
+        xpos = thickness + 1
+        ypos = 0
+        for i in range(nLines):
+            if i % 2 == 0:
+                #Even number, start with short mark and draw from top to bottom
+                GenLinesFlex(xpos, 0, ShortMark, 1, 1, path)
+                #Then nMark-1 long Lines
+                GenLinesFlex(xpos, ShortMark+2, LongMark, nMark-1, 1, path)
+                #And the last short line
+                GenLinesFlex(xpos, TotalHeight-ShortMark, ShortMark, 1, 1, path)
+            else:
+                #odd number draw long lines only, at 1mm from edge
+                GenLinesFlex(xpos, w_lid-1, LongMark, nMark, -1, path)
+            xpos += delta_x
+
+
+        
+        #Apply bounding box of path
+        DebugMsg("Path Bounding box="+str(((path.xmin, path.ymin), (path.xmax, path.ymax)))+'\n')
+        if path.xmin < self.BoundingBox[0]:
+            self.BoundingBox[0] = path.xmin
+        if path.ymin < self.BoundingBox[1]:
+            self.BoundingBox[1] = path.ymin
+        if path.xmax > self.BoundingBox[2] - 2:
+            self.BoundingBox[2] = path.xmax + 2
+        if  path.ymax > self.BoundingBox[3] - 2:
+            self.BoundingBox[3] =  path.ymax + 2
+        path.GenPath()
+        
+
+
     def effect(self):
         """
         Draws a card box box, based on provided parameters
@@ -2427,6 +2734,7 @@ class GenericBox(inkex.Effect):
         zbox = self.svg.unittouu(str(self.options.z) + unit)
         zlid = self.svg.unittouu(str(self.options.z_lid) + unit)
         z_dome_lid = self.svg.unittouu(str(self.options.z_dome_lid) + unit)
+        radius_lid = self.svg.unittouu(str(self.options.radius_lid) + unit)
 
         if self.options.StraigthCorners:
             back_left_radius = 0
@@ -2507,6 +2815,30 @@ class GenericBox(inkex.Effect):
                 exit()
             self.front_joint = 0        #No joint on front top
         
+        # If lid is rounded sliding, there are always internal walls left and right
+        if self.options.lid_type == 'SlidingRounded':
+            if radius_lid > zbox or radius_lid > ybox:
+                inkex.errormsg('Error: incorrect radius for sliding lid, should be lower than width and height ')
+                CloseDebugFile()
+                exit()                
+            self.InternalWalls_LR = True
+            zbox += thickness               #Also increase box height to take into account the sliding top, but NOT internal walls height
+            zbox_internal_walls -= 0.2      #Indeed, reduce internal wall height to ease sliding
+            if back_left_radius > 0 or back_right_radius > 0 or front_left_radius > 0 or  front_right_radius:
+                inkex.errormsg('Error: Sliding lid is incompatible with rounded corners')
+                CloseDebugFile()
+                exit()
+            self.front_joint = 0        #No joint on front top
+            #Check that the dimensions are OK. y_box should be greater than radius_lid*pi/2
+            self.radius_back_lid = thickness * 6
+            self.ytop_sliding_rounded = ybox - radius_lid
+            self.length_sliding_rounded = zbox + radius_lid*(math.pi/2 - 1)
+            DebugMsg("Rounded sliding, radius_lid="+str(radius_lid)+", radius_back_lid="+str(self.radius_back_lid)+" ytop_sliding_rounded="+str(self.ytop_sliding_rounded)+" length_sliding_rounded="+str(self.length_sliding_rounded)+"\n")
+            if self.length_sliding_rounded > zbox + self.radius_back_lid*(math.pi/2 - 2) +  self.ytop_sliding_rounded - 2 * thickness:
+                inkex.errormsg('Error: no room for sliding lid, please increase width, should be at least '+str( (radius_lid - self.radius_back_lid)*(math.pi/2 - 1) + 2 * thickness + radius_lid + self.radius_back_lid ))
+                CloseDebugFile()
+                exit()                
+
         # If there is no lid, no notches on top
         if self.options.lid_type == 'Without':
             self.front_joint = 0        #No joint on front top
@@ -2580,7 +2912,7 @@ class GenericBox(inkex.Effect):
             DebugMsg("Hinge width="+str(hingeWidth)+", Number of hinges="+str(len(self.HingeList))+", Hinge pos="+str(self.HingeList)+"\n")
 
 
-        #Draw external faces which are planes, begin with top
+        #Draw external faces which are planes, begin with top (no top for rounded sliding or open or coffin)  
         
         self.BuildTop(xbox, ybox, back_left_radius, back_right_radius, front_right_radius, front_left_radius)
 
@@ -2625,17 +2957,18 @@ class GenericBox(inkex.Effect):
                 LidFace.drawSimpleFace(True)
                 self.UpdateBoundingBox(LidFace)    #Now update bounding box, to place back face just below
                 yposface = -self.BoundingBox[3]
-            DebugMsg("\nStraight face for front\n")
-            #No round, front is straight
-            #Front is xbox * zbox, all corners are external in each direction
-            Face = BoxFace('Front', CornerPoint((0,0), 0, 0, 0), 
-                          self.front_joint, CornerPoint((xbox,0), 0, 0, 0), 
-                          self.z_joint, CornerPoint((xbox,zbox), 0, 0, 0),
-                          self.x_joint, CornerPoint((0,zbox), 0, 0, 0),
-                          self.z_joint, self.group, [xpos, yposface])        #Draw face just below previous drawings
-            Face.drawSimpleFace(True)
-            xpos = -Face.BoundingBox[2]-2
-            self.UpdateBoundingBox(Face)    #Now update bounding box
+            if self.options.lid_type != 'SlidingRounded':
+                DebugMsg("\nStraight face for front\n")
+                #No round, front is straight
+                #Front is xbox * zbox, all corners are external in each direction
+                Face = BoxFace('Front', CornerPoint((0,0), 0, 0, 0), 
+                              self.front_joint, CornerPoint((xbox,0), 0, 0, 0), 
+                              self.z_joint, CornerPoint((xbox,zbox), 0, 0, 0),
+                              self.x_joint, CornerPoint((0,zbox), 0, 0, 0),
+                              self.z_joint, self.group, [xpos, yposface])        #Draw face just below previous drawings
+                Face.drawSimpleFace(True)
+                xpos = -Face.BoundingBox[2]-2
+                self.UpdateBoundingBox(Face)    #Now update bounding box
         elif front_left_radius == 0:
             #Rounded corner on Front right
             #Straight corner on Front/left, there is a flex band starting on front left
@@ -2761,19 +3094,26 @@ class GenericBox(inkex.Effect):
             # No round for left face
             # Left is ybox * zbox, corners are external in y but internal in x
             DebugMsg("\nStraight face for Left\n")
-            if self.options.lid_type == 'Sliding':
+            if self.options.lid_type == 'Sliding' or self.options.lid_type == 'SlidingRounded' :
                 delta_yposface = 2*thickness + 2
             else:
                 delta_yposface = 0
-            LeftFace = BoxFace('Left', CornerPoint((0,0), 0, 1, 0, self.options.lid_type == 'WoodHinge'), 
-                          self.left_joint, CornerPoint((ybox,0), 0, 1, 0), 
-                          self.z_joint, CornerPoint((ybox,zbox), 0, 1, 0),
-                          self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
-                          self.z_joint, self.group, [xpos, yposface-delta_yposface])        #Draw face just right from previous drawings
+            if self.options.lid_type == 'SlidingRounded':
+                LeftFace = BoxFace('Left', CornerPoint((0,0), 0, 1, 0, 0), 
+                              self.y_joint, CornerPoint((ybox,0), radius_lid, 1, 0), 
+                              0, CornerPoint((ybox,zbox), 0, 1, 0),
+                              self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
+                              self.z_joint, self.group, [xpos, yposface-delta_yposface])        #Draw face just right from previous drawings
+            else:
+                LeftFace = BoxFace('Left', CornerPoint((0,0), 0, 1, 0, self.options.lid_type == 'WoodHinge'), 
+                              self.left_joint, CornerPoint((ybox,0), 0, 1, 0), 
+                              self.z_joint, CornerPoint((ybox,zbox), 0, 1, 0),
+                              self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
+                              self.z_joint, self.group, [xpos, yposface-delta_yposface])        #Draw face just right from previous drawings
             LeftFace.drawSimpleFace(True)
             self.UpdateBoundingBox(LeftFace)    #Now update bounding box
             if self.options.lid_type == 'Sliding':
-                LeftFace.drawSideLineNotches(xpos, yposface)         #Right face is straight
+                LeftFace.drawSideLineNotches(xpos, yposface)         #Left face is straight
             xpos = -LeftFace.BoundingBox[2]-2
         elif back_left_radius == 0:
             #Rounded corner on Front left
@@ -2822,15 +3162,22 @@ class GenericBox(inkex.Effect):
 
             # Right is ybox * zbox, corners are external in y but internal in x
             DebugMsg("\nStraight face for Right\n")
-            if self.options.lid_type == 'Sliding':
+            if self.options.lid_type == 'Sliding' or self.options.lid_type == 'SlidingRounded':
                 delta_yposface = 2*thickness + 2
             else:
                 delta_yposface = 0
-            RightFace = BoxFace('Right', CornerPoint((0,0), 0, 1, 0), 
-                          self.right_joint, CornerPoint((ybox,0), 0, 1, 0, self.options.lid_type == 'WoodHinge'), 
-                          self.z_joint, CornerPoint((ybox,zbox), 0, 1, 0),
-                          self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
-                          self.z_joint, self.group, [xpos, yposface-delta_yposface])        #Draw face just below previous drawings
+            if self.options.lid_type == 'SlidingRounded':
+                RightFace = BoxFace('Right', CornerPoint((0,0), radius_lid, 1, 0), 
+                              self.y_joint, CornerPoint((ybox,0), 0, 1, 0), 
+                              self.z_joint, CornerPoint((ybox,zbox), 0, 1, 0),
+                              self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
+                              0, self.group, [xpos, yposface-delta_yposface])        #Draw face just right from previous drawings
+            else:
+                RightFace = BoxFace('Right', CornerPoint((0,0), 0, 1, 0), 
+                              self.right_joint, CornerPoint((ybox,0), 0, 1, 0, self.options.lid_type == 'WoodHinge'), 
+                              self.z_joint, CornerPoint((ybox,zbox), 0, 1, 0),
+                              self.y_joint, CornerPoint((0,zbox), 0, 1, 0),
+                              self.z_joint, self.group, [xpos, yposface-delta_yposface])        #Draw face just below previous drawings
             RightFace.drawSimpleFace(True)
             if self.options.lid_type == 'Sliding':
                 RightFace.drawSideLineNotches(xpos, yposface)         #Right face is straight
@@ -2995,13 +3342,20 @@ class GenericBox(inkex.Effect):
                 d2 = front_left_radius
             else:
                 d2 = thickness
-
-            InternalLeft = BoxFace('Int_Left', CornerPoint((0,0), 0, 1, 1),         #First corner, internal on both sides 
-                              0, CornerPoint((ybox-d1-d2,0), 0, 1, 1), 
-                              right_joint, CornerPoint((ybox-d1-d2, zbox_internal_walls), 0, 1, 1),
-                              0, CornerPoint((0,zbox_internal_walls), 0, 1, 1),
-                              left_joint, self.group, [xpos, ypos])        #Draw face just below previous drawings
-            InternalLeft.drawFaceWithHoles(self.n_slot_y, self.y_slot_size, d1 - thickness, self.z_joint, True)
+            if self.options.lid_type == 'SlidingRounded':
+                InternalLeft = BoxFace('Int_Left', CornerPoint((0,0), self.radius_back_lid, 1, 0),         #First corner, internal x, external y
+                                  0, CornerPoint((ybox,0), radius_lid, 1, 0), 
+                                  0, CornerPoint((ybox, zbox), 0, 1, 1),      #internal both directions
+                                  0, CornerPoint((0,zbox), 0, 1, 1),
+                                  self.z_joint, self.group, [xpos, ypos])         #Draw face just below previous drawings
+                InternalLeft.drawFaceInternalSlidingLeft(True)                   #Left side
+            else:
+                InternalLeft = BoxFace('Int_Left', CornerPoint((0,0), 0, 1, 1),         #First corner, internal on both sides 
+                                  0, CornerPoint((ybox-d1-d2,0), 0, 1, 1), 
+                                  right_joint, CornerPoint((ybox-d1-d2, zbox_internal_walls), 0, 1, 1),
+                                  0, CornerPoint((0,zbox_internal_walls), 0, 1, 1),
+                                  left_joint, self.group, [xpos, ypos])        #Draw face just below previous drawings
+                InternalLeft.drawFaceWithHoles(self.n_slot_y, self.y_slot_size, d1 - thickness, self.z_joint, True)
             xpos = -InternalLeft.BoundingBox[2]-2
 
 
@@ -3024,19 +3378,41 @@ class GenericBox(inkex.Effect):
             else:
                 d2 = thickness
             DebugMsg("\nDrawing Internal Right\n")
-            InternalRight = BoxFace('Int_Right', CornerPoint((0,0), 0, 1, 1),         #First corner, internal on both sides 
+            if self.options.lid_type == 'SlidingRounded':
+                InternalRight = BoxFace('Int_Right', CornerPoint((0,0), radius_lid, 1, 0),         #First corner, internal x, external y
+                                  0, CornerPoint((ybox,0), self.radius_back_lid, 1, 0), 
+                                  self.z_joint, CornerPoint((ybox, zbox), 0, 1, 1),      #internal both directions
+                                  0, CornerPoint((0,zbox), 0, 1, 1),
+                                  0, self.group, [xpos, ypos])         #Draw face just below previous drawings
+                InternalRight.drawFaceInternalSlidingRight(True)                   #Right side
+            else:
+                InternalRight = BoxFace('Int_Right', CornerPoint((0,0), 0, 1, 1),         #First corner, internal on both sides 
                               0, CornerPoint((ybox-d1-d2,0), 0, 1, 1), 
                               right_joint, CornerPoint((ybox-d1-d2, zbox_internal_walls), 0, 1, 1),
                               0, CornerPoint((0,zbox_internal_walls), 0, 1, 1),
                               left_joint, self.group, [xpos, ypos])        #Draw face just below previous drawings
-            InternalRight.drawFaceWithHoles(self.n_slot_y, self.y_slot_size, d1 - thickness, self.z_joint, True)
+                InternalRight.drawFaceWithHoles(self.n_slot_y, self.y_slot_size, d1 - thickness, self.z_joint, True)
 
+            xpos = -InternalRight.BoundingBox[2]-2
             self.UpdateBoundingBox(InternalRight)    #Now update bounding box
         elif self.InternalWalls_FB:
             #Udate bounding box with front and back value
             self.UpdateBoundingBox(InternalFront)    #Now update bounding box
-
-
+        
+        if self.options.lid_type == 'SlidingRounded':
+            #Draw the internal wall at the back used to "protect" the sliding lid inside the box
+            InternalProtection = BoxFace('Int_Back', CornerPoint((0,0), 0, 1, 1),         #First corner, internal x, internal y
+                                  0, CornerPoint((xbox-2*thickness,0), 0, 1, 1), 
+                                  self.z_joint, CornerPoint((xbox-2*thickness, zbox-self.radius_back_lid-thickness), 0, 1, 1),      #internal both directions
+                                  0, CornerPoint((0,zbox-self.radius_back_lid-thickness), 0, 1, 1),
+                                  self.z_joint, self.group, [xpos, ypos])         #Draw face just below previous drawings
+            InternalProtection.drawSimpleFace(True)
+            self.UpdateBoundingBox(InternalProtection)    #Now update bounding box
+            ypos = -self.BoundingBox[3]
+            xpos = 0.0
+            #And draw the sliding lid
+            self.drawRoundedSlidindLid(xbox-SlidingLidSpaceX, self.length_sliding_rounded, xpos, ypos, self.group)
+            
         #Then internal walls
         #Columns first
         xpos = 0

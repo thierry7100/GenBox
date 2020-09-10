@@ -44,12 +44,15 @@
 				<item value="WoodHinge">Charnière bois</item>
 				<item value="SteelHinge">Charnière métal</item>
 				<item value="Coffin">Coffre</item>
+				<item value="SlidingRounded">Coulissant arrondi</item>
 			</param>
 			<param name="name" type="description" appearance="header">Hauteur couvercle (seulement avec des vrais couvercles)</param>
 			<param name="z_lid" type="float" min="15.0" max="1000.0" gui-text="Hauteur couvercle">20.0</param>
 			<param name="name" type="description" appearance="header">Seulement pour le style coffre</param>
 			<param name="z_dome_lid" type="float" min="15.0" max="1000.0" gui-text="Hauteur du dôme">20.0</param>
 			<param name="SkipFlexLines" type="boolean" _gui-text="Simplification lignes flex">true</param>
+			<_param name="name" type="description" appearance="header">Seulement pour style 'coulissant arondi'</_param>
+			<param name="radius_lid" type="float" min="15.0" max="1000.0" _gui-text="Arrondi couvercle">50.0</param>
 		</page>
 		<page name="Slots" _gui-text="Cases intérieures slots">
 			<param name="n_slot_x" type="int" min="1" max="20" _gui-text="Colonnes">1</param>

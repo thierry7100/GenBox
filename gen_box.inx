@@ -44,12 +44,15 @@
 				<_item value="WoodHinge">Integrated wood hinge</_item>
 				<_item value="SteelHinge">Steel hinge</_item>
 				<_item value="Coffin">Coffin</_item>
+				<item value="SlidingRounded">Rounded sliding</item>
 			</param>
 			<_param name="name" type="description" appearance="header">Only used with real lid</_param>
 			<param name="z_lid" type="float" min="15.0" max="1000.0" _gui-text="Lid height">20.0</param>
 			<_param name="name" type="description" appearance="header">Only used with coffin lid</_param>
 			<param name="z_dome_lid" type="float" min="15.0" max="1000.0" _gui-text="dome lid height">20.0</param>
 			<param name="SkipFlexLines" type="boolean" _gui-text="Skip flex lines when possible">true</param>
+			<_param name="name" type="description" appearance="header">Only used with rounded sliding lid</_param>
+			<param name="radius_lid" type="float" min="15.0" max="1000.0" _gui-text="Radius lid">50.0</param>
 		</page>
 		<page name="Slots" _gui-text="Internal slots">
 			<param name="n_slot_x" type="int" min="1" max="20" _gui-text="Number of columns">1</param>
