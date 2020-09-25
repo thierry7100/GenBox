@@ -630,21 +630,23 @@ class NotchLine:
                 self.nb_finger_joint = (self.nb_finger_joint // 2 ) + 1    #Previous number was odd (2n+1), new notch count = n+1 , as first one with half notch for the first one
                 #Draw the first half notch as a shift from start position
                 self.start_line_joint_x = self.StartX - 0.5*finger_joint_size*math.cos(angle)
-                self.start_line_joint_y = self.StartY - 0.5*finger_joint_size*math.sin(angle) 
-                if (self.nb_finger_joint%2) == 0 and self.EndStatus:
-                    #Now number of joints is even, so switch StartStatus to have different status (Start and End), and keep End Status
-                    #In this case, Start is now External
-                    self.StartStatus = 0
-                    #Move Start point
-                    self.start_line_joint_x += thickness * math.cos(angle-math.pi/2)
-                    self.start_line_joint_y += thickness * math.sin(angle-math.pi/2)
-                else:
-                    #Now number of joints is even, so switch StartStatus to have different status (Start and End), and keep End Status
-                    #In this case, Start is now Internal
-                    self.StartStatus = 1
-                    #Move Start point
-                    self.start_line_joint_x += thickness * math.cos(angle+math.pi/2)
-                    self.start_line_joint_y += thickness * math.sin(angle+math.pi/2)
+                self.start_line_joint_y = self.StartY - 0.5*finger_joint_size*math.sin(angle)
+                DebugMsg("NotchLine Init, DrawHalf=1, start_line_joint = "+str((self.start_line_joint_x, self.start_line_joint_y))+" nb_joint="+str(self.nb_finger_joint)+" EndStatus="+str(self.EndStatus)+'\n')
+                if (self.nb_finger_joint%2) == 0:
+                    if self.EndStatus:
+                        #Now number of joints is even, so switch StartStatus to have different status (Start and End), and keep End Status
+                        #In this case, Start is now External
+                        self.StartStatus = 0
+                        #Move Start point
+                        self.start_line_joint_x += thickness * math.cos(angle-math.pi/2)
+                        self.start_line_joint_y += thickness * math.sin(angle-math.pi/2)
+                    else:
+                        #Now number of joints is even, so switch StartStatus to have different status (Start and End), and keep End Status
+                        #In this case, Start is now Internal
+                        self.StartStatus = 1
+                        #Move Start point
+                        self.start_line_joint_x += thickness * math.cos(angle+math.pi/2)
+                        self.start_line_joint_y += thickness * math.sin(angle+math.pi/2)
         else:      #Start and end have different internal/external status. Number of notches should be even
             if size < 2 * finger_joint_size:
                 self.nb_finger_joint = 0
@@ -1181,11 +1183,13 @@ class FlexFace:
         First_hLine = NotchLine((-(FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), ((FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), 0.0, FlexElement[1], 1)      #Draw only second half
         if First_hLine.StartStatus == 0:
             self.path.MoveTo(0, -thickness)   # Start position (0, -thickness) because flex band is external in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
         else:
             self.path.MoveTo(0, 0)   # Start position (0, 0) because flex band is internal in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
         First_hLine.drawNotchLine(self.path)
         xpos = (FlexElement[0]-FlexElement[2]-LastRadius)/2
-        DebugMsg("After drawing first half of notch line, xpos ="+str(xpos)+'\n')
+        DebugMsg("After drawing first half of notch line, pos ="+str((self.path.x_noff, self.path.y_noff))+'\n')
         ListFlexLines.append((xpos, FlexElement[2]))            #Add this position to draw flex lines.
         #Then the line corresponding to rounded corner
         if FlexElement[2] > 0:
