@@ -7,7 +7,6 @@ import inkex
 import simplestyle
 import math
 from th_inkscape_path import *
-from lxml import etree
 
 #Constants defined here
 WoodHingeSize = 3               #To be multiplied by thickness 
@@ -18,10 +17,8 @@ SteelHingeSpacing = 0.3
 RadiusSteelHingeAxis = 1.3          #Use axis about 2.6mm diameter, I use nails 2.3mmx70mm. The actual hole will be larger
 RadiusSteelHingeAxisChange = 0.25   #Factor the the larger hole, multiplied by thickness
 MinMove = 1e-2                  #Minimum distance betwwen two points (0.01 mm !)
-
 SlidingLidSpaceZ = 1.3          #Space to allow easy move of the sliding lid (z or thickness). To be multiplied by thickness
 SlidingLidSpaceX = 1.0          #Space to allow easy move in X direction/
-
 
 #Global variables used for the whole program
 thickness = 0
@@ -62,7 +59,6 @@ def drawHole(path, x0, y0, dx, dy, burn):
     path.LineToHRel(dx-burn)
     path.LineToVRel(-dy+burn)
     path.LineToHRel(-dx+burn)
-
 #   Generate vertical lines for flex
 #   Parameters : StartX, StartY, size, nunmber of lines and +1 if lines goes up and -1 down
 def GenLinesFlex(StartX, StartY, Size, nLine, UpDown, path):
@@ -71,7 +67,6 @@ def GenLinesFlex(StartX, StartY, Size, nLine, UpDown, path):
         path.Line(StartX, StartY, StartX, StartY + UpDown*Size)
         DebugMsg("GenLinesFlex from "+str((StartX, StartY))+" to "+str((StartX, StartY + UpDown*Size))+'\n')
         StartY += UpDown*(Size+2)
-
 
 class Ellipse:
     '''
@@ -240,6 +235,7 @@ class Ellipse:
         path.LineTo(x,y)
         #We should be arrived at the last point now !
     
+
     
     def drawFlexEllipse(self, path, height, SkipFlex, Position):
         '''
@@ -436,6 +432,7 @@ class CornerPoint:
                 self.yc = position[1] - self.radius + thickness
                 self.y_corner = position[1] + thickness
 
+
         #Compute position of line of finger joints
         if position[0]  <= thickness and position[1]  <= thickness:
             #Top left corner, compute positions of start/end of corners
@@ -553,7 +550,6 @@ class CornerPoint:
                 #Draw line between corner and start of joints
                 path.LineTo(self.x_start_joint, self.y_start_joint)
         DebugMsg("End drawCorner PathPos ="+str((path.x_noff, path.y_noff))+'\n')
-
 
 
 class NotchLine:
@@ -1694,7 +1690,6 @@ class BoxFace:
         if ClosePath:
             self.path.Close()
             self.path.GenPath()  
-
     def drawSideLineNotches(self, xpos, ypos):
         '''
         Draw the side line notches used with sliding lid. These lines are on left and right lines
@@ -2064,100 +2059,100 @@ class GenericBox(inkex.Effect):
         inkex.Effect.__init__(self)
         self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
 
-        self.arg_parser.add_argument('--unit', action = 'store',
-          type = str, dest = 'unit', default = 'mm',
+        self.OptionParser.add_option('--unit', action = 'store',
+          type = 'string', dest = 'unit', default = 'mm',
           help = 'Unit, should be one of ')
 
-        self.arg_parser.add_argument('--thickness', action = 'store',
-          type = float, dest = 'thickness', default = '3.0',
+        self.OptionParser.add_option('--thickness', action = 'store',
+          type = 'float', dest = 'thickness', default = '3.0',
           help = 'Material thickness')
 
-        self.arg_parser.add_argument('--lid_type', action = 'store',
-          type = str, dest = 'lid_type', default = 'Simple',
+        self.OptionParser.add_option('--lid_type', action = 'store',
+          type = 'string', dest = 'lid_type', default = 'Simple',
           help = 'Box lid style ')
 
-        self.arg_parser.add_argument('--n_slot_x', action = 'store',
-          type = int, dest = 'n_slot_x', default = '2',
+        self.OptionParser.add_option('--n_slot_x', action = 'store',
+          type = 'int', dest = 'n_slot_x', default = '2',
           help = 'Number of columns of slots')
 
-        self.arg_parser.add_argument('--n_slot_y', action = 'store',
-          type = int, dest = 'n_slot_y', default = '2',
+        self.OptionParser.add_option('--n_slot_y', action = 'store',
+          type = 'int', dest = 'n_slot_y', default = '2',
           help = 'Number of rows of slots')
 
-        self.arg_parser.add_argument('--h_slot', action = 'store',
-          type = int, dest = 'h_slot', default = '100',
+        self.OptionParser.add_option('--h_slot', action = 'store',
+          type = 'int', dest = 'h_slot', default = '100',
           help = 'Height of slots (%)')
 
-        self.arg_parser.add_argument('--z', action = 'store',
-          type = float, dest = 'z', default = '40.0',
+        self.OptionParser.add_option('--z', action = 'store',
+          type = 'float', dest = 'z', default = '40.0',
           help = "box height")
 
-        self.arg_parser.add_argument('--y', action = 'store',
-          type = float, dest = 'y', default = '60.0',
+        self.OptionParser.add_option('--y', action = 'store',
+          type = 'float', dest = 'y', default = '60.0',
           help = "box depth")
 
-        self.arg_parser.add_argument('--x', action = 'store',
-          type = float, dest = 'x', default = '40.0',
+        self.OptionParser.add_option('--x', action = 'store',
+          type = 'float', dest = 'x', default = '40.0',
           help = "box width")
 
-        self.arg_parser.add_argument('--z_lid', action = 'store',
-          type = float, dest = 'z_lid', default = '20.0',
+        self.OptionParser.add_option('--z_lid', action = 'store',
+          type = 'float', dest = 'z_lid', default = '20.0',
           help = 'lid height')
 
-        self.arg_parser.add_argument('--z_dome_lid', action = 'store',
-          type = float, dest = 'z_dome_lid', default = '20.0',
+        self.OptionParser.add_option('--z_dome_lid', action = 'store',
+          type = 'float', dest = 'z_dome_lid', default = '20.0',
           help = 'dome lid height')
 
-        self.arg_parser.add_argument('--SkipFlexLines', action = 'store',
-          type = inkex.Boolean, dest = 'SkipFlexLines', default = 'true',
+        self.OptionParser.add_option('--SkipFlexLines', action = 'store',
+          type = 'inkbool', dest = 'SkipFlexLines', default = 'true',
           help = 'Skip flex lines when possible')
 
-        self.arg_parser.add_argument('--radius_lid', action = 'store',
-          type = float, dest = 'radius_lid', default = '50.0',
+        self.OptionParser.add_option('--radius_lid', action = 'store',
+          type = 'float', dest = 'radius_lid', default = '50.0',
           help = 'Radius of rounded lid')
 
-        self.arg_parser.add_argument('--burn', action = 'store',
-          type = float, dest = 'burn', default = '0.1',
+        self.OptionParser.add_option('--burn', action = 'store',
+          type = 'float', dest = 'burn', default = '0.1',
           help = 'laser burn size')
 
-        self.arg_parser.add_argument('--StraigthCorners', action = 'store',
-          type = inkex.Boolean, dest = 'StraigthCorners', default = 'true',
+        self.OptionParser.add_option('--StraigthCorners', action = 'store',
+          type = 'inkbool', dest = 'StraigthCorners', default = 'true',
           help = 'Straight corners')
 
-        self.arg_parser.add_argument('--back_left_radius', action = 'store',
-          type = float, dest = 'back_left_radius', default = '10.0',
+        self.OptionParser.add_option('--back_left_radius', action = 'store',
+          type = 'float', dest = 'back_left_radius', default = '10.0',
           help = 'Radius of top left rounded corner')
 
-        self.arg_parser.add_argument('--back_right_radius', action = 'store',
-          type = float, dest = 'back_right_radius', default = '10.0',
+        self.OptionParser.add_option('--back_right_radius', action = 'store',
+          type = 'float', dest = 'back_right_radius', default = '10.0',
           help = 'Radius of top right rounded corner')
 
-        self.arg_parser.add_argument('--front_left_radius', action = 'store',
-          type = float, dest = 'front_left_radius', default = '10.0',
+        self.OptionParser.add_option('--front_left_radius', action = 'store',
+          type = 'float', dest = 'front_left_radius', default = '10.0',
           help = 'Radius of bottom left rounded corner')
 
-        self.arg_parser.add_argument('--front_right_radius', action = 'store',
-          type = float, dest = 'front_right_radius', default = '10.0',
+        self.OptionParser.add_option('--front_right_radius', action = 'store',
+          type = 'float', dest = 'front_right_radius', default = '10.0',
           help = 'Radius of bottom right rounded corner')
 
-        self.arg_parser.add_argument('--AutoSize', action = 'store',
-          type = inkex.Boolean, dest = 'AutoSizeJoints', default = 'true',
+        self.OptionParser.add_option('--AutoSize', action = 'store',
+          type = 'inkbool', dest = 'AutoSizeJoints', default = 'true',
           help = 'Size of finger joints computed from box dimlensions')
 
-        self.arg_parser.add_argument('--x_joint', action = 'store',
-          type = float, dest = 'x_joint', default = '10.0',
+        self.OptionParser.add_option('--x_joint', action = 'store',
+          type = 'float', dest = 'x_joint', default = '10.0',
           help = 'Size of finger joints in X direction')
 
-        self.arg_parser.add_argument('--y_joint', action = 'store',
-          type = float, dest = 'y_joint', default = '10.0',
+        self.OptionParser.add_option('--y_joint', action = 'store',
+          type = 'float', dest = 'y_joint', default = '10.0',
           help = 'Size of finger joints in Y direction')
 
-        self.arg_parser.add_argument('--z_joint', action = 'store',
-          type = float, dest = 'z_joint', default = '10.0',
+        self.OptionParser.add_option('--z_joint', action = 'store',
+          type = 'float', dest = 'z_joint', default = '10.0',
           help = 'Size of finger joints in Z direction')
 
-        self.arg_parser.add_argument('--Topic', action = 'store',
-          type = str, dest = 'TopicPage', 
+        self.OptionParser.add_option('--Topic', action = 'store',
+          type = 'string', dest = 'TopicPage', 
           help = 'Size of finger joints in Z direction')
 
 
@@ -2676,7 +2671,6 @@ class GenericBox(inkex.Effect):
         if  path.ymax > self.BoundingBox[3] - 2:
             self.BoundingBox[3] =  path.ymax + 2
         path.GenPath()
-
     def drawRoundedSlidindLid(self, w_lid, l_lid, xOffset, yOffset, parent):
         ''' 
         Draw the rounded sliding lid.
@@ -2744,8 +2738,6 @@ class GenericBox(inkex.Effect):
             self.BoundingBox[3] =  path.ymax + 2
         path.GenPath()
         
-
-
     def effect(self):
         """
         Draws a card box box, based on provided parameters
@@ -2768,12 +2760,12 @@ class GenericBox(inkex.Effect):
         # convert units
         unit = self.options.unit
 
-        xbox = self.svg.unittouu(str(self.options.x) + unit)
-        ybox = self.svg.unittouu(str(self.options.y) + unit)
-        zbox = self.svg.unittouu(str(self.options.z) + unit)
-        zlid = self.svg.unittouu(str(self.options.z_lid) + unit)
-        z_dome_lid = self.svg.unittouu(str(self.options.z_dome_lid) + unit)
-        radius_lid = self.svg.unittouu(str(self.options.radius_lid) + unit)
+        xbox = self.unittouu(str(self.options.x) + unit)
+        ybox = self.unittouu(str(self.options.y) + unit)
+        zbox = self.unittouu(str(self.options.z) + unit)
+        zlid = self.unittouu(str(self.options.z_lid) + unit)
+        z_dome_lid = self.unittouu(str(self.options.z_dome_lid) + unit)
+        radius_lid = self.unittouu(str(self.options.radius_lid) + unit)
 
         if self.options.StraigthCorners:
             back_left_radius = 0
@@ -2781,23 +2773,33 @@ class GenericBox(inkex.Effect):
             front_right_radius = 0
             front_left_radius = 0
         else:
-            back_left_radius = self.svg.unittouu(str(self.options.back_left_radius) + unit)
-            back_right_radius = self.svg.unittouu(str(self.options.back_right_radius) + unit)
-            front_right_radius = self.svg.unittouu(str(self.options.front_right_radius) + unit)
-            front_left_radius = self.svg.unittouu(str(self.options.front_left_radius) + unit)
-        
-        max_radius = max(back_left_radius, back_right_radius, front_right_radius, front_left_radius)
-        thickness = self.svg.unittouu(str(self.options.thickness) + unit)
-        burn = self.svg.unittouu(str(self.options.burn) + unit)
+            back_left_radius = self.unittouu(str(self.options.back_left_radius) + unit)
+            back_right_radius = self.unittouu(str(self.options.back_right_radius) + unit)
+            front_right_radius = self.unittouu(str(self.options.front_right_radius) + unit)
+            front_left_radius = self.unittouu(str(self.options.front_left_radius) + unit)
+            if back_left_radius > 0 and back_left_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here back_left_radius='+str(back_left_radius)+ 'mm')
+                exit()
+            if back_right_radius > 0 and back_right_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here back_right_radius='+str(back_right_radius)+ 'mm')
+                exit()
+            if front_right_radius > 0 and front_right_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here front_right_radius='+str(front_right_radius)+ 'mm')
+                exit()
+            if front_left_radius > 0 and front_left_radius < 5:
+                inkex.errormsg('Error: round corner radius should be greater than 5mm, here front_left_radius='+str(front_left_radius)+ 'mm')
+                exit()
 
-        self.x_joint = self.svg.unittouu(str(self.options.x_joint) + unit) 
-        self.y_joint = self.svg.unittouu(str(self.options.y_joint) + unit) 
-        self.z_joint = self.svg.unittouu(str(self.options.z_joint) + unit) 
+        max_radius = max(back_left_radius, back_right_radius, front_right_radius, front_left_radius)
+        thickness = self.unittouu(str(self.options.thickness) + unit)
+        burn = self.unittouu(str(self.options.burn) + unit)
+
+        self.x_joint = self.unittouu(str(self.options.x_joint) + unit) 
+        self.y_joint = self.unittouu(str(self.options.y_joint) + unit) 
+        self.z_joint = self.unittouu(str(self.options.z_joint) + unit) 
 
         self.x_slot_size = (xbox  - (1+self.n_slot_x)*thickness)/self.n_slot_x 
         self.y_slot_size = (ybox - (1+self.n_slot_y)*thickness)/self.n_slot_y 
-
-
         
         if self.x_slot_size < 18 or self.y_slot_size < 18:
             inkex.errormsg('Error: each slot should be at least 18mm large, here x_slot_size='+str(self.x_slot_size)+ ' y_slot_size='+str(self.y_slot_size))
@@ -2810,13 +2812,13 @@ class GenericBox(inkex.Effect):
 
                 
         svg = self.document.getroot()
-        docWidth = self.svg.unittouu(svg.get('width'))
-        docHeigh = self.svg.unittouu(svg.attrib['height'])
+        docWidth = self.unittouu(svg.get('width'))
+        docHeigh = self.unittouu(svg.attrib['height'])
 
-        layer = etree.SubElement(svg, 'g')
+        layer = inkex.etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Generic Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
-        self.group = etree.SubElement(layer, 'g')
+        self.group = inkex.etree.SubElement(layer, 'g')
         OpenDebugFile()
         
         HasLid = False
@@ -2879,7 +2881,6 @@ class GenericBox(inkex.Effect):
                 inkex.errormsg('Error: no room for sliding lid, please increase width, should be at least '+str( (radius_lid - self.radius_back_lid)*(math.pi/2 - 1) + 2 * thickness + radius_lid + self.radius_back_lid ))
                 CloseDebugFile()
                 exit()                
-
         # If there is no lid, no notches on top
         if self.options.lid_type == 'Without':
             self.front_joint = 0        #No joint on front top
@@ -3383,6 +3384,7 @@ class GenericBox(inkex.Effect):
                 d2 = front_left_radius
             else:
                 d2 = thickness
+
             if self.options.lid_type == 'SlidingRounded':
                 InternalLeft = BoxFace('Int_Left', CornerPoint((0,0), self.radius_back_lid, 1, 0),         #First corner, internal x, external y
                                   0, CornerPoint((ybox,0), radius_lid, 1, 0), 
@@ -3439,6 +3441,8 @@ class GenericBox(inkex.Effect):
         elif self.InternalWalls_FB:
             #Udate bounding box with front and back value
             self.UpdateBoundingBox(InternalFront)    #Now update bounding box
+
+
         
         if self.options.lid_type == 'SlidingRounded':
             #Draw the internal wall at the back used to "protect" the sliding lid inside the box
@@ -3468,7 +3472,7 @@ class GenericBox(inkex.Effect):
         xpos = 0
         ypos -= zbox_internal_walls + thickness + 2
         for i in range(self.n_slot_y-1):
-            self.drawRowWall(i, self.n_slot_x, self.x_slot_size, self.ListNotchRows, xbox-2*thickness, zbox_internal_walls, self.options.h_slot, xpos, ypos, self.group) 
+            self.drawRowWall(i, self.n_slot_x, self.x_slot_size, self.ListNotchRows, xbox-2*thickness, zbox_internal_walls, xpos, ypos, self.group) 
             xpos -= xbox + 2                  #Next position for drawing
         
         #
@@ -3490,4 +3494,4 @@ class GenericBox(inkex.Effect):
 
 # Create effect instance and apply it.
 effect = GenericBox()
-effect.run()
+effect.affect()
