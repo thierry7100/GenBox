@@ -20,7 +20,7 @@
 				<_item value="px">px</_item>
 				<_item value="pc">pc</_item>
 			</param>
-			<_param name="name" type="description" appearance="header">External dimensions for the box</_param>
+			<_param name="name" type="description" appearance="header">Internal dimensions for the box</_param>
 			<param name="x" type="float" min="10.0" max="1000.0" _gui-text="width">80.0</param>
 			<param name="y" type="float" min="10.0" max="1000.0" _gui-text="depth">60.0</param>
 			<param name="z" type="float" min="10.0" max="1000.0" _gui-text="height">40.0</param>
