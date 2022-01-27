@@ -828,7 +828,7 @@ class FlexLines:
         elif Height+2*thickness < 150:
             nSegmentFlex = 3
         else:
-            nSegmentFlex = Height+2*thickness // 50
+            nSegmentFlex = int((Height+2*thickness) // 50)
         #Then compute distance between flex lines. The basic idea is to have a minimum of 15 lines per corner, with lines distant at least of 1mm
         #But also ensure that distance between lines is at most at 2mm 
         round_distance = Radius*math.pi/2
@@ -2194,19 +2194,12 @@ class GenericBox(inkex.Effect):
         These positions are NOT sensitive to burn factor. The burn factor should be added later if needed
         '''
         NPos = []
-        if size_slot < 25:
+        if size_slot < 50:
             #Small size, only one notch 
             i_notch_number = 1
             notch_size = size_slot / 3 # Notch is center aligned
-        elif size_slot < 50:
-            #Medium size, draw 5mm notches
-            notch_number = size_slot / 5
-            if (notch_number % 2) == 0:
-                notch_number -= 1           #should be odd
-            notch_size = size_slot / notch_number
-            i_notch_number = int(notch_number // 2)
         elif size_slot < 120:
-            #Medium high size, draw 10mm notches
+            #Medium size, draw 10mm notches (about )
             notch_number = size_slot / 10
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
