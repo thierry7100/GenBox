@@ -611,7 +611,7 @@ class NotchLine:
                 #Draw only first half of notch line,i.e. end will be at the middle of segment
                 self.EndX = (self.StartX + self.EndX) / 2
                 self.EndY = (self.StartY + self.EndY) / 2
-                self.nb_finger_joint = (self.nb_finger_joint // 2 ) + 1     #Previous number was odd (2n+1), new notch count = n + 1, as last one will be half notch
+                self.nb_finger_joint = int(self.nb_finger_joint // 2 ) + 1     #Previous number was odd (2n+1), new notch count = n + 1, as last one will be half notch
                 self.end_line_joint_x =   self.start_line_joint_x +  ((self.nb_finger_joint-0.5)*finger_joint_size)*math.cos(angle)         #Quit line at end of last notch
                 self.end_line_joint_y =   self.start_line_joint_y +  ((self.nb_finger_joint-0.5)*finger_joint_size)*math.sin(angle)         #Quit line at end of last notch
                 if (self.nb_finger_joint%2) == 0 and self.StartStatus:
@@ -630,7 +630,7 @@ class NotchLine:
                 #Draw only second half of notch line,i.e. Start will be at the middle of segment
                 self.StartX = (self.StartX + self.EndX) / 2
                 self.StartY = (self.StartY + self.EndY) / 2
-                self.nb_finger_joint = (self.nb_finger_joint // 2 ) + 1    #Previous number was odd (2n+1), new notch count = n+1 , as first one with half notch for the first one
+                self.nb_finger_joint = int(self.nb_finger_joint // 2 ) + 1    #Previous number was odd (2n+1), new notch count = n+1 , as first one with half notch for the first one
                 #Draw the first half notch as a shift from start position
                 self.start_line_joint_x = self.StartX - 0.5*finger_joint_size*math.cos(angle)
                 self.start_line_joint_y = self.StartY - 0.5*finger_joint_size*math.sin(angle)
@@ -1537,7 +1537,7 @@ class BoxFace:
                  +' n_slot='+str(n_slot)+'  slot_size='+str(slot_size)+" Delta_Pos="+str(DeltaHolePosition)+'\n')
         for i in range(1, n_slot):
             #For each wall, draw holes corresponding at each notch on zbox
-            for j in range((l_NotchLine.nb_finger_joint)//2):
+            for j in range(int(l_NotchLine.nb_finger_joint//2)):
                 drawHole(self.path, i*(slot_size+thickness) - DeltaHolePosition -thickness, StartHole + j*Spacing, thickness, l_NotchLine.JointSize, burn)
 
         #Close the path if asked
@@ -2197,32 +2197,36 @@ class GenericBox(inkex.Effect):
         if size_slot < 50:
             #Small size, only one notch 
             i_notch_number = 1
+            notch_number = 3
             notch_size = size_slot / 3 # Notch is center aligned
         elif size_slot < 120:
-            #Medium size, draw 10mm notches (about )
-            notch_number = size_slot / 10
+            #Medium size, draw 15mm notches
+            notch_number = int(size_slot / 15)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
         elif size_slot < 200:
-            #Medium high size, draw 20mm notches
-            notch_number = size_slot / 20
+            #Medium high size, draw 25mm notches
+            notch_number = int(size_slot / 25)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
         else:
-            #Large size, draw 30mm notches
-            notch_number = size_slot / 30
+            #Large size, draw 40mm notches
+            notch_number = int(size_slot / 40)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
+        #Compute initial shift. Add this shift to reach symetrical notches within each slot
+        Shift = (size_slot - notch_size * notch_number) / 2
+        DebugMsg("CalcNotchPos: Size_slot="+str(size_slot)+", notch_number="+str(notch_number)+", notch_size="+str(notch_size)+", Shift="+str(Shift)+'\n')
         for j in range(n_slot):
             #For each slot
             for i in range(i_notch_number):
-                NPos.append((j*(size_slot+thickness)+notch_size+2*i*notch_size, notch_size, j))        #Add a tuple with 3 elements for start, size of notch and group number
+                NPos.append((j*(size_slot+thickness)+notch_size+2*i*notch_size + Shift, notch_size, j))        #Add a tuple with 3 elements for start, size of notch and group number
         return NPos
 
     def ComputeJointSize(self, xbox, ybox, zbox, back_left_radius, back_right_radius, front_right_radius, front_left_radius):

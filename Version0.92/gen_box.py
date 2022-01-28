@@ -580,6 +580,8 @@ class NotchLine:
         # Compute size of all finger joints
         # Compute size as a distance to deal with every direction.
         size = math.sqrt((self.EndX - self.StartX)*(self.EndX - self.StartX) + (self.EndY - self.StartY)*(self.EndY - self.StartY))
+        # Round size to avoid float errors
+        size = round(size, 3)
         # Compute number of joints
         if finger_joint_size == 0:          #  No finger joint
             self.nb_finger_joint = 0
@@ -605,7 +607,7 @@ class NotchLine:
                 #Draw only first half of notch line,i.e. end will be at the middle of segment
                 self.EndX = (self.StartX + self.EndX) / 2
                 self.EndY = (self.StartY + self.EndY) / 2
-                self.nb_finger_joint = (self.nb_finger_joint // 2 ) + 1     #Previous number was odd (2n+1), new notch count = n + 1, as last one will be half notch
+                self.nb_finger_joint = int(self.nb_finger_joint // 2 ) + 1     #Previous number was odd (2n+1), new notch count = n + 1, as last one will be half notch
                 self.end_line_joint_x =   self.start_line_joint_x +  ((self.nb_finger_joint-0.5)*finger_joint_size)*math.cos(angle)         #Quit line at end of last notch
                 self.end_line_joint_y =   self.start_line_joint_y +  ((self.nb_finger_joint-0.5)*finger_joint_size)*math.sin(angle)         #Quit line at end of last notch
                 if (self.nb_finger_joint%2) == 0 and self.StartStatus:
@@ -624,7 +626,7 @@ class NotchLine:
                 #Draw only second half of notch line,i.e. Start will be at the middle of segment
                 self.StartX = (self.StartX + self.EndX) / 2
                 self.StartY = (self.StartY + self.EndY) / 2
-                self.nb_finger_joint = (self.nb_finger_joint // 2 ) + 1    #Previous number was odd (2n+1), new notch count = n+1 , as first one with half notch for the first one
+                self.nb_finger_joint = int(self.nb_finger_joint // 2 ) + 1    #Previous number was odd (2n+1), new notch count = n+1 , as first one with half notch for the first one
                 #Draw the first half notch as a shift from start position
                 self.start_line_joint_x = self.StartX - 0.5*finger_joint_size*math.cos(angle)
                 self.start_line_joint_y = self.StartY - 0.5*finger_joint_size*math.sin(angle)
@@ -779,6 +781,7 @@ class NotchLine:
         DebugMsg("drawNotchLine, Angle ="+str(round(self.Angle*180/math.pi))+" AngleJoint="+str(round(AngleJoint*180/math.pi))+'\n')
         DebugMsg("start_line_joint="+str((self.start_line_joint_x, self.start_line_joint_y))+"  JointSize="+str(self.JointSize)+" DeltaBurn="+str(DeltaBurn)+'\n')
         #First go up to start of notch line + first joint + burn correction
+        DebugMsg("Position before drawNotchLine : "+str((path.x_noff, path.y_noff))+'\n')
         xcur = self.start_line_joint_x + (self.JointSize+DeltaBurn)*math.cos(self.Angle)
         ycur = self.start_line_joint_y + (self.JointSize+DeltaBurn)*math.sin(self.Angle)
         path.LineTo(xcur, ycur)
@@ -821,7 +824,7 @@ class FlexLines:
         elif Height+2*thickness < 150:
             nSegmentFlex = 3
         else:
-            nSegmentFlex = Height+2*thickness // 50
+            nSegmentFlex = int((Height+2*thickness) // 50)
         #Then compute distance between flex lines. The basic idea is to have a minimum of 15 lines per corner, with lines distant at least of 1mm
         #But also ensure that distance between lines is at most at 2mm 
         round_distance = Radius*math.pi/2
@@ -1530,7 +1533,7 @@ class BoxFace:
                  +' n_slot='+str(n_slot)+'  slot_size='+str(slot_size)+" Delta_Pos="+str(DeltaHolePosition)+'\n')
         for i in range(1, n_slot):
             #For each wall, draw holes corresponding at each notch on zbox
-            for j in range((l_NotchLine.nb_finger_joint)//2):
+            for j in range(int(l_NotchLine.nb_finger_joint//2)):
                 drawHole(self.path, i*(slot_size+thickness) - DeltaHolePosition -thickness, StartHole + j*Spacing, thickness, l_NotchLine.JointSize, burn)
 
         #Close the path if asked
@@ -2186,38 +2189,35 @@ class GenericBox(inkex.Effect):
         These positions are NOT sensitive to burn factor. The burn factor should be added later if needed
         '''
         NPos = []
-        if size_slot < 25:
+        if size_slot < 50:
             #Small size, only one notch 
             i_notch_number = 1
+            notch_number = 3
             notch_size = size_slot / 3 # Notch is center aligned
-        elif size_slot < 50:
-            #Medium size, draw 5mm notches
-            notch_number = size_slot / 5
-            if (notch_number % 2) == 0:
-                notch_number -= 1           #should be odd
-            notch_size = size_slot / notch_number
-            i_notch_number = int(notch_number // 2)
         elif size_slot < 120:
-            #Medium high size, draw 10mm notches
-            notch_number = size_slot / 10
+            #Medium size, draw 15mm notches
+            notch_number = int(size_slot / 15)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
         elif size_slot < 200:
-            #Medium high size, draw 20mm notches
-            notch_number = size_slot / 20
+            #Medium high size, draw 25mm notches
+            notch_number = int(size_slot / 25)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
         else:
-            #Large size, draw 30mm notches
-            notch_number = size_slot / 30
+            #Large size, draw 40mm notches
+            notch_number = int(size_slot / 40)
             if (notch_number % 2) == 0:
                 notch_number -= 1           #should be odd
             notch_size = size_slot / notch_number
             i_notch_number = int(notch_number // 2)
+        #Compute initial shift. Add this shift to reach symetrical notches within each slot
+        Shift = (size_slot - notch_size * notch_number) / 2
+        DebugMsg("CalcNotchPos: Size_slot="+str(size_slot)+", notch_number="+str(notch_number)+", notch_size="+str(notch_size)+", Shift="+str(Shift)+'\n')
         for j in range(n_slot):
             #For each slot
             for i in range(i_notch_number):
@@ -2990,7 +2990,7 @@ class GenericBox(inkex.Effect):
         LidFace = None
         if front_left_radius == 0 and front_right_radius == 0:
             if HasLid:
-                DebugMsg("Draw font lid\n")
+                DebugMsg("Draw front lid\n")
                 LidFace = BoxFace('Lid_Front', CornerPoint((0,0), 0, 0, 0), 
                               self.x_joint, CornerPoint((xbox,0), 0, 0, 0), 
                               self.z_joint, CornerPoint((xbox,zlid), 0, 0, 0),
@@ -3255,6 +3255,7 @@ class GenericBox(inkex.Effect):
 
         if front_right_radius > 0 and back_right_radius > 0 and back_left_radius > 0 and front_left_radius > 0:
             #Specific case, all corners are rounded
+            DebugMsg("\n\nFlex on all faces\n")
             FlexBand = ('Flex_All', 1, 1,                                   #Draw flex all around the box with clips
                         (xbox, self.back_joint, back_right_radius, self.x_joint),         #(Half) Back Notch Line and round corner r= back_right_radius
                         (ybox, self.right_joint, front_right_radius, self.y_joint),       #Then Right notch line with Front/Right rounded corner
@@ -3472,7 +3473,7 @@ class GenericBox(inkex.Effect):
         xpos = 0
         ypos -= zbox_internal_walls + thickness + 2
         for i in range(self.n_slot_y-1):
-            self.drawRowWall(i, self.n_slot_x, self.x_slot_size, self.ListNotchRows, xbox-2*thickness, zbox_internal_walls, xpos, ypos, self.group) 
+            self.drawRowWall(i, self.n_slot_x, self.x_slot_size, self.ListNotchRows, xbox-2*thickness, zbox_internal_walls, self.options.h_slot, xpos, ypos, self.group) 
             xpos -= xbox + 2                  #Next position for drawing
         
         #
