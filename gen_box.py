@@ -1,13 +1,27 @@
 #!/usr/bin/env python
 # coding: utf8
 # We will use the inkex module with the predefined Effect base class.
-import inkex
 # The simplestyle module provides functions for style parsing.
 
-import simplestyle
+from enum import Flag
 import math
-from th_inkscape_path import *
+from numbers import Real
+from operator import pos
+import os.path
+from typing import List
+from more_itertools import last
+
+from numpy import False_
+import inkex
+import simplepath
+import simplestyle
+import simpletransform
+import re
 from lxml import etree
+from inkex import paths
+from inkex import bezier
+from th_inkscape_path import *
+
 
 #Constants defined here
 WoodHingeSize = 3               #To be multiplied by thickness 

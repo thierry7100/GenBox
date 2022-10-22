@@ -90,7 +90,7 @@ Dans ce cas, n'oubliez pas de republier !
 
 ##Bilbiographie
 
-Je me suis inspiré du site de Florian Festi, très bien fait, mais j'ai essayer de regrouper en une seule extension, et j'ai également corrigé quelques problèmes sur les boîtes générées.
+Je me suis inspiré du site de Florian Festi, très bien fait, mais j'ai essayé de regrouper en une seule extension, et j'ai également corrigé quelques problèmes sur les boîtes générées.
 Le site de FLorian Festi: [https://www.festi.info/boxes.py Festi.info]
 
 
