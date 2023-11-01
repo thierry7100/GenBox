@@ -3327,7 +3327,7 @@ class GenericBox(inkex.Effect):
             #If rounded corner, shorten size by radius, if not by thickness
             if back_left_radius > 0:
                 left_joint = 0
-                d1 = back_left_radius
+                d1 = back_left_radius + thickness
             else:
                 d1 = thickness
             if self.InternalWalls_LR:
@@ -3337,7 +3337,7 @@ class GenericBox(inkex.Effect):
             #If rounded corner, shorten size by radius, if not by thickness
             if back_right_radius > 0:
                 right_joint = 0
-                d2 = back_right_radius
+                d2 = back_right_radius + thickness
             else:
                 d2 = thickness
 
