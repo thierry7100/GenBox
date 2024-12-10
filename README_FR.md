@@ -67,6 +67,8 @@ Les onglets sont a priori à utiliser dans l'ordre, qui se veut logique...
 
 2. Onglet coins arrondis. La permière case permet de forcer tous les coins comme droits. Sinon, vous pouvez choisir le rayon de courbure de chaque coin de manière indépendante. 0 indique un coin droit. Attention à ne pas mettre de valeur trop faible. Toute valeur supérieure à 0 et inférieure à 10 (environ) devrait être proscrite. <br>
 
+Quand les 4 coins sont arrondis, il y a une bande unique pour le côté, elle peut donc être assez longue et dépasser la taille de la découpeuse laser. Il y a donc une option permettant de diviser en 2 cette bande. Ne pas utiliser cette opton si ce n'est pas nécessaire, cela ajoute des clips sur la face avant de votre boîte.
+
 <center>![Onglet_CoinsArrondis](https://user-images.githubusercontent.com/35993911/69336767-93d72b80-0c5f-11ea-9c42-00ed50379fef.png)</center><br>
 
 3. Onglet style de couvercle. Les différents styles de couvercle ont été détaillés dans le paragraphe précédent. Choisissez celui va convient à votre usage. Attention les couvercles à glissière ou avec charnière sont incompatibles avec des coins arrondis à l'arrière de la boîte. Pour les coffres, les 4 coins doivent être droits.

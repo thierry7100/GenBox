@@ -33,6 +33,7 @@
 			<param name="back_right_radius" type="float" min="0.0" max="100.0" gui-text="Arrière droit">10.0</param>
 			<param name="front_left_radius" type="float" min="0.0" max="100.0" gui-text="Avant gauche">10.0</param>
 			<param name="front_right_radius" type="float" min="0.0" max="100.0" gui-text="Avant droit">10.0</param>
+			<param name="Halves_x_2" type="boolean" gui-text="Si 4 coins arrondis découpe la bande en deux parties">false</param>
 		</page>
 		<page name="Lid" gui-text="Style couvercle">
 			<param name="lid_type" type="enum" gui-text="Style de couvercle">

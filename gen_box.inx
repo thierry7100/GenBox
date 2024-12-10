@@ -33,6 +33,7 @@
 			<param name="back_right_radius" type="float" min="0.0" max="100.0" _gui-text="Back right radius">10.0</param>
 			<param name="front_left_radius" type="float" min="0.0" max="100.0" _gui-text="Front left radius">10.0</param>
 			<param name="front_right_radius" type="float" min="0.0" max="100.0" _gui-text="Front right radius">10.0</param>
+			<param name="Halves_x_2" type="boolean" gui-text="With 4 rouded corners cut the flex band in 2 halves">false</param>
 		</page>
 		<page name="Lid" _gui-text="Lid style">
 			<param name="lid_type" type="enum" _gui-text="Lid style">

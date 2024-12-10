@@ -1182,8 +1182,10 @@ class FlexFace:
         #Compute clips number and position, zone with clips will be between thickness and zbox - thickness 
         zoneclips = self.height - 2*thickness
         #Size of clips is dependant to size of zoneclips
-        if zoneclips < 50:
+        if zoneclips < 40:
             sizeclips = 10
+        elif zoneclips < 65:
+            sizeclips = 14
         else:
             sizeclips = 18
         nbclips = int(zoneclips // sizeclips)
@@ -1192,11 +1194,14 @@ class FlexFace:
             CloseDebugFile()
             return
         DebugMsg("\ndrawRoundedFlexFace, sizeclips="+str(sizeclips)+" nbclips="+str(nbclips)+'\n')
+        # FlexBandList[3..6] holds the 'corners' of the face
+        # 3 : Back right,  4 : Front right,  5 : Front Left, 6 : Back Left 
+        # 7 is the special point at half of the back side
         ListFlexLines = []
         LastRadius = self.FlexBandList[6][2]       # Radius of left back corner
         xpos = 0
         FlexElement = self.FlexBandList[3]
-        DebugMsg("First Half notch line, size ="+str(FlexElement[0])+" Size Round BackLeft="+str(LastRadius)+" Size Round BackRight="+str(FlexElement[2])+'\n')
+        DebugMsg("First, draw second half notch line (Back side), size ="+str(FlexElement[0])+" Size Round BackLeft="+str(LastRadius)+" Size Round BackRight="+str(FlexElement[2])+'\n')
         #The notch line will be centered on xpos (0), so should start at -(SizeNotchLine-SizeRadius_BackLeft-SizeRadius_BackRight)/2
         First_hLine = NotchLine((-(FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), ((FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), 0.0, FlexElement[1], 1)      #Draw only second half
         if First_hLine.StartStatus == 0:
@@ -1231,7 +1236,7 @@ class FlexFace:
             LastRadius = FlexElement[2]
             DebugMsg("After drawing line for rounded corner, xpos="+str(xpos)+'\n')
 
-        #Last element 
+        #Last element corresponding to half of back
         FlexElement = self.FlexBandList[7]
         DebugMsg("Last Element (7): xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+" LastRadius="+str(LastRadius)+"--> "+str(FlexElement[0] - LastRadius - FlexElement[2]) +'\n')
         #Last Notch Line, at last half of it ! First half indeed.
@@ -1241,7 +1246,7 @@ class FlexFace:
         
         self.path.LineTo(xpos, thickness)
         DebugMsg('Clip Line 1, xpos='+str(xpos)+'\n')
-        #Then Vertical clip line
+        #Then Vertical clip line on the right
         self.path.LineToVRel((zoneclips - nbclips*sizeclips)/2)
         for i in range(nbclips):
             self.drawClip(sizeclips, 1)
@@ -1282,9 +1287,296 @@ class FlexFace:
         xpos -= FlexElement[2]*math.pi/2
         DebugMsg("Last Round corner, l="+str(FlexElement[2]*math.pi/2)+" new pos="+str((xpos, self.height+thickness))+'\n')
         #Then Notch Line, half of it
+        #Use LastRadius here, it was set in the first part of the function
         hLine = NotchLine((xpos, self.height+thickness, 0), (xpos-(FlexElement[0]-FlexElement[2]-LastRadius), self.height+thickness, 0), math.pi, FlexElement[3], -1)      #Draw only first half
         hLine.drawNotchLine(self.path)
         xpos -= (FlexElement[0]-FlexElement[2] - LastRadius)/2
+        self.path.LineTo(xpos, self.height)
+        #Then Vertical clip line
+        DebugMsg('Vertical Clip 2, pos='+str((xpos, self.height))+'\n')
+        #and vertical trip (reverse)
+        self.path.LineToVRel(-1.0*((zoneclips - nbclips*sizeclips)/2) - thickness)
+        for i in range(nbclips):
+            self.drawClip(sizeclips, -1)
+        if First_hLine.StartStatus == 0:    #If StartStatus is external, move to (0,-Thickness)
+            self.path.LineTo(0, -thickness)
+        else:
+            self.path.LineTo(0, 0)
+
+        #Now draw flex lines
+        
+        for FlexLinePos in ListFlexLines:
+            Flex = FlexLines()
+            Flex.drawFlexLines(FlexLinePos[0], self.height, FlexLinePos[1], self.path)
+        #Get bounding box of path
+        self.BoundingBox = (self.path.xmin, self.path.ymin, self.path.xmax, self.path.ymax)
+
+        if ClosePath:
+            self.path.Close()
+            self.path.GenPath()
+
+    def drawRoundedFlexFaceHalfRight(self, ClosePath):
+        '''
+        Draw a Flex band when all corners are rounded. 
+        This is a specific case because there are clips at the center of back face
+        In this version cut the face in 2 halves
+        Back face should be the first in list
+        '''
+        
+        #Compute clips number and position, zone with clips will be between thickness and zbox - thickness 
+        zoneclips = self.height - 2*thickness
+        #Size of clips is dependant to size of zoneclips
+        if zoneclips < 40:
+            sizeclips = 10
+        elif zoneclips < 65:
+            sizeclips = 14
+        else:
+            sizeclips = 18
+        nbclips = int(zoneclips // sizeclips)
+        if nbclips == 0:
+            inkex.errormsg('Box is not high enough, no room for clips')
+            CloseDebugFile()
+            return
+        DebugMsg("\ndrawRoundedFlexFaceHalfRight, sizeclips="+str(sizeclips)+" nbclips="+str(nbclips)+", BoundingBox="+str(self.BoundingBox)+'\n')
+        # FlexBandList[3..6] holds the 'corners' of the face
+        # 3 : Back right,  4 : Front right,  5 : Front Left, 6 : Back Left 
+        # 7 is the special point at half of the back side
+        ListFlexLines = []
+        xpos = 0
+        #First : Second half from Back left to Back Right 
+        LastRadius = self.FlexBandList[6][2]    # Radius of left back corner, this is the start point
+        FlexElement = self.FlexBandList[3]      # End corner (BR)
+        DebugMsg("First, draw second half notch line (Back side), size ="+str(FlexElement[0])+" Size Round BackLeft="+str(LastRadius)+" Size Round BackRight="+str(FlexElement[2])+'\n')
+        #The notch line will be centered on xpos (0), so should start at -(SizeNotchLine-SizeRadius_BackLeft-SizeRadius_BackRight)/2
+        First_hLine = NotchLine((-(FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), ((FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), 0.0, FlexElement[1], 1)      #Draw only second half
+        if First_hLine.StartStatus == 0:
+            self.path.MoveTo(0, -thickness)   # Start position (0, -thickness) because flex band is external in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        else:
+            self.path.MoveTo(0, 0)   # Start position (0, 0) because flex band is internal in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        First_hLine.drawNotchLine(self.path)
+        xpos = (FlexElement[0]-FlexElement[2]-LastRadius)/2
+        DebugMsg("After drawing first half of notch line, pos ="+str((self.path.x_noff, self.path.y_noff))+'\n')
+        ListFlexLines.append((xpos, FlexElement[2]))            #Add this position to draw flex lines.
+        #Then the line corresponding to rounded corner
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos + FlexElement[2]*math.pi/2, -thickness)
+        xpos += FlexElement[2]*math.pi/2
+        DebugMsg("Line corresponding to back right corner, l="+str(FlexElement[2]*math.pi/2)+" xpos="+str(xpos)+'\n')
+        LastRadius = FlexElement[2]
+        # Now draw notch line from Back right to Front Right
+        FlexElement = self.FlexBandList[4]
+        DebugMsg("Front right: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+" LastRadius="+str(LastRadius)+"--> "+str(FlexElement[0] - LastRadius - FlexElement[2]) +'\n')
+        #First Notch Line
+        hLine = NotchLine((xpos, -thickness, 0), (xpos+FlexElement[0] - LastRadius - FlexElement[2] , -thickness, 0), 0.0, FlexElement[1], 0)
+        hLine.drawNotchLine(self.path)
+        xpos += FlexElement[0] - LastRadius - FlexElement[2]
+        #Then the line corresponding to rounded corner
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos + FlexElement[2]*math.pi/2, -thickness)
+            ListFlexLines.append((xpos, FlexElement[2]))
+        xpos += FlexElement[2]*math.pi/2
+        LastRadius = FlexElement[2]
+        DebugMsg("After drawing line for front right rounded corner, xpos="+str(xpos)+'\n')
+
+        #Last element corresponding to half of front
+        FlexElement = self.FlexBandList[5]
+        DebugMsg("Last Element(front left): xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+" LastRadius="+str(LastRadius)+"--> "+str(FlexElement[0] - LastRadius - FlexElement[2]) +'\n')
+        #Last Notch Line, at last half of it ! First half indeed.
+        hLine = NotchLine((xpos, -thickness, 0), (xpos+FlexElement[0] - LastRadius - FlexElement[2], -thickness, 0), 0.0, FlexElement[1], -1)
+        hLine.drawNotchLine(self.path)
+        xpos += (FlexElement[0] - LastRadius - FlexElement[2])/2
+        
+        self.path.LineTo(xpos, thickness)
+        DebugMsg('Clip Line 1, xpos='+str(xpos)+'\n')
+        #Then Vertical clip line on the right
+        self.path.LineToVRel((zoneclips - nbclips*sizeclips)/2)
+        for i in range(nbclips):
+            self.drawClip(sizeclips, 1)
+        
+        DebugMsg("Bottom line, reverse, start at xpos="+str((xpos, self.height+thickness))+'\n')
+        #Then Bottom line (reverse from top line)
+        FlexElement = self.FlexBandList[5]
+        #Element 5 is the Previous one, with radius of front left corner
+        NextRadius = self.FlexBandList[4][2]        #This is the radius of the back right corner
+        DebugMsg("Element Front Left: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+' --> '+str(FlexElement[0]-FlexElement[2]-NextRadius)+'\n')
+        #Last Notch Line, half line. Center line on xpos
+        hLine = NotchLine((xpos + (FlexElement[0] - NextRadius - FlexElement[2])/2, self.height+thickness, 0), (xpos-(FlexElement[0] - NextRadius - FlexElement[2])/2, self.height+thickness, 0), math.pi, FlexElement[3], 1)
+        if hLine.StartStatus == 0:
+            self.path.LineTo(xpos, self.height+thickness)
+        else:
+            self.path.LineTo(xpos, self.height)
+        hLine.drawNotchLine(self.path)
+        xpos -= (FlexElement[0] - NextRadius - FlexElement[2])/2
+        FlexElement = self.FlexBandList[4]
+        NextRadius = self.FlexBandList[3][2]
+        DebugMsg("To Front Right corner xpos="+str(xpos)+' Size ='+str(FlexElement[0])+" radius ="+str(FlexElement[2])+" NextRadius="+str(NextRadius)+' --> '+str(FlexElement[0] - FlexElement[2] - NextRadius)+'\n')
+        #First the line corresponding to rounded corner (reverse from previous)
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos - FlexElement[2]*math.pi/2, self.height+thickness)
+            xpos -= FlexElement[2]*math.pi/2
+        DebugMsg("After line for front right rounded corner, l="+str(FlexElement[2]*math.pi/2)+" Pos="+str((xpos, self.height+thickness))+'\n')
+        #Then Notch Line
+        hLine = NotchLine((xpos, self.height+thickness, 0), (xpos-(FlexElement[0] - FlexElement[2] - NextRadius), self.height+thickness, 0), math.pi, FlexElement[3], 0)
+        hLine.drawNotchLine(self.path)
+        xpos -= FlexElement[0] - FlexElement[2] - NextRadius
+
+        NextRadius = self.FlexBandList[6][2]        #Last line use Back Left
+        FlexElement = self.FlexBandList[3]          # Goto back right
+        DebugMsg("Return to first Element Back left: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+" radius ="+str(FlexElement[2])+" NextRadius="+str(NextRadius)+' --> '+str(FlexElement[0] - FlexElement[2] - NextRadius)+'\n')
+        #Then Last round corner
+        self.path.LineTo(xpos - FlexElement[2]*math.pi/2, self.height+thickness)
+        xpos -= FlexElement[2]*math.pi/2
+        DebugMsg("Last Round corner, l="+str(FlexElement[2]*math.pi/2)+" new pos="+str((xpos, self.height+thickness))+'\n')
+        #Then Notch Line, half of it
+        hLine = NotchLine((xpos, self.height+thickness, 0), (xpos-(FlexElement[0]-FlexElement[2]-NextRadius), self.height+thickness, 0), math.pi, FlexElement[3], -1)      #Draw only first half
+        hLine.drawNotchLine(self.path)
+        xpos -= (FlexElement[0]-FlexElement[2] - NextRadius)/2
+        self.path.LineTo(xpos, self.height)
+        #Then Vertical clip line
+        DebugMsg('Vertical Clip 2, pos='+str((xpos, self.height))+'\n')
+        #and vertical trip (reverse)
+        self.path.LineToVRel(-1.0*((zoneclips - nbclips*sizeclips)/2) - thickness)
+        for i in range(nbclips):
+            self.drawClip(sizeclips, -1)
+        if First_hLine.StartStatus == 0:    #If StartStatus is external, move to (0,-Thickness)
+            self.path.LineTo(0, -thickness)
+        else:
+            self.path.LineTo(0, 0)
+
+        #Now draw flex lines
+        
+        for FlexLinePos in ListFlexLines:
+            Flex = FlexLines()
+            Flex.drawFlexLines(FlexLinePos[0], self.height, FlexLinePos[1], self.path)
+        #Get bounding box of path
+        self.BoundingBox = (self.path.xmin, self.path.ymin, self.path.xmax, self.path.ymax)
+
+        if ClosePath:
+            self.path.Close()
+            self.path.GenPath()
+
+
+    def drawRoundedFlexFaceHalfLeft(self, ClosePath):
+        '''
+        Draw a Flex band when all corners are rounded. 
+        This is a specific case because there are clips at the center of back face
+        In this version cut the face in 2 halves
+        Back face should be the first in list
+        '''
+        
+        #Compute clips number and position, zone with clips will be between thickness and zbox - thickness 
+        zoneclips = self.height - 2*thickness
+        #Size of clips is dependant to size of zoneclips
+        if zoneclips < 40:
+            sizeclips = 10
+        elif zoneclips < 65:
+            sizeclips = 14
+        else:
+            sizeclips = 18
+        nbclips = int(zoneclips // sizeclips)
+        if nbclips == 0:
+            inkex.errormsg('Box is not high enough, no room for clips')
+            CloseDebugFile()
+            return
+        DebugMsg("\ndrawRoundedFlexFaceHalfLeft, sizeclips="+str(sizeclips)+" nbclips="+str(nbclips)+", BoundingBox="+str(self.BoundingBox)+'\n')
+        # FlexBandList[3..6] holds the 'corners' of the face
+        # 3 : Back right,  4 : Front right,  5 : Front Left, 6 : Back Left 
+        # 7 is the special point at half of the back side
+        ListFlexLines = []
+        xpos = 0
+        #First line from Half front to Front Left
+        LastRadius = self.FlexBandList[4][2]       # Radius of left front corner
+        FlexElement = self.FlexBandList[5]         # Go to Front left
+        DebugMsg("First, draw First half notch line (Front side), size ="+str(FlexElement[0])+" Size Front Right="+str(LastRadius)+" Size Round Front Left="+str(FlexElement[2])+'\n')
+        #The notch line will be centered on xpos (0), so should start at -(SizeNotchLine-SizeRadius_BackLeft-SizeRadius_BackRight)/2
+        First_hLine = NotchLine( (-(FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), ((FlexElement[0]-FlexElement[2] - LastRadius)/2, -thickness, 0), 0.0, FlexElement[1], 1)      #Draw only second half
+        if First_hLine.StartStatus == 0:
+            self.path.MoveTo(0, -thickness)   # Start position (0, -thickness) because flex band is external in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        else:
+            self.path.MoveTo(0, 0)   # Start position (0, 0) because flex band is internal in Y direction, and this side start internal in X
+            DebugMsg("Start Point is "+str((self.path.x_noff, self.path.y_noff))+'\n')
+        First_hLine.drawNotchLine(self.path)
+        xpos = (FlexElement[0]-FlexElement[2]-LastRadius)/2
+        DebugMsg("After drawing first half of notch line, pos ="+str((self.path.x_noff, self.path.y_noff))+'\n')
+        ListFlexLines.append((xpos, FlexElement[2]))            #Add this position to draw flex lines.
+        #Then the line corresponding to rounded corner (FL)
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos + FlexElement[2]*math.pi/2, -thickness)
+        xpos += FlexElement[2]*math.pi/2
+        DebugMsg("Line corresponding to Front left corner, l="+str(FlexElement[2]*math.pi/2)+" xpos="+str(xpos)+'\n')
+        LastRadius = FlexElement[2]     #For next step
+        # Now draw notch line from Front Left to Back left (6)
+        FlexElement = self.FlexBandList[6]
+        DebugMsg("Front right: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+" LastRadius="+str(LastRadius)+"--> "+str(FlexElement[0] - LastRadius - FlexElement[2]) +'\n')
+        #First Notch Line
+        hLine = NotchLine((xpos, -thickness, 0), (xpos+FlexElement[0] - LastRadius - FlexElement[2] , -thickness, 0), 0.0, FlexElement[1], 0)
+        hLine.drawNotchLine(self.path)
+        xpos += FlexElement[0] - LastRadius - FlexElement[2]
+        #Then the line corresponding to rounded corner
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos + FlexElement[2]*math.pi/2, -thickness)
+            ListFlexLines.append((xpos, FlexElement[2]))
+        xpos += FlexElement[2]*math.pi/2
+        LastRadius = FlexElement[2]
+        DebugMsg("After drawing line for Back left rounded corner, xpos="+str(xpos)+'\n')
+
+        #Last element corresponding to half of back from Back left to Back right (first half)
+        FlexElement = self.FlexBandList[3]      #Use Back right corner
+        DebugMsg("Last Element(front left): xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+" LastRadius="+str(LastRadius)+"--> "+str(FlexElement[0] - LastRadius - FlexElement[2]) +'\n')
+        #Last Notch Line, at last half of it ! first half indeed.
+        hLine = NotchLine((xpos, -thickness, 0), (xpos+FlexElement[0] - LastRadius - FlexElement[2], -thickness, 0), 0.0, FlexElement[1], -1)
+        hLine.drawNotchLine(self.path)
+        xpos += (FlexElement[0] - LastRadius - FlexElement[2])/2
+        
+        self.path.LineTo(xpos, thickness)
+        DebugMsg('Clip Line 1, xpos='+str(xpos)+'\n')
+        #Then Vertical clip line on the right
+        self.path.LineToVRel((zoneclips - nbclips*sizeclips)/2)
+        for i in range(nbclips):
+            self.drawClip(sizeclips, 1)
+        
+        DebugMsg("Bottom line, reverse, start at xpos="+str((xpos, self.height+thickness))+'\n')
+        #Then Bottom line (reverse from top line)
+        #Element 3 is the Previous one, with radius of Back right corner
+        FlexElement = self.FlexBandList[3]
+        NextRadius = self.FlexBandList[6][2]        #This is the radius of the back Left corner
+        DebugMsg("Element Front Left: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+' radius ='+str(FlexElement[2])+' --> '+str(FlexElement[0]-FlexElement[2]-NextRadius)+'\n')
+        #Last Notch Line, half line. Center line on xpos, draw first half 
+        hLine = NotchLine((xpos + (FlexElement[0] - NextRadius - FlexElement[2])/2, self.height+thickness, 0), (xpos-(FlexElement[0] - NextRadius - FlexElement[2])/2, self.height+thickness, 0), math.pi, FlexElement[3], 1)
+        if hLine.StartStatus == 0:
+            self.path.LineTo(xpos, self.height+thickness)
+        else:
+            self.path.LineTo(xpos, self.height)
+        hLine.drawNotchLine(self.path)
+        xpos -= (FlexElement[0] - NextRadius - FlexElement[2])/2
+        #Then from 6 (BL) to 5 (FL)
+        FlexElement = self.FlexBandList[6]
+        NextRadius = self.FlexBandList[5][2]
+        DebugMsg("To Front left corner : xpos="+str(xpos)+' Size ='+str(FlexElement[0])+" radius ="+str(FlexElement[2])+" NextRadius="+str(NextRadius)+' --> '+str(FlexElement[0] - FlexElement[2] - NextRadius)+'\n')
+        #First the line corresponding to rounded corner (reverse from previous)
+        if FlexElement[2] > 0:
+            self.path.LineTo(xpos - FlexElement[2]*math.pi/2, self.height+thickness)
+            xpos -= FlexElement[2]*math.pi/2
+        DebugMsg("After line for front left rounded corner, l="+str(FlexElement[2]*math.pi/2)+" Pos="+str((xpos, self.height+thickness))+'\n')
+        #Then Notch Line from BL (6) to FL (5)
+        hLine = NotchLine((xpos, self.height+thickness, 0), (xpos-(FlexElement[0] - FlexElement[2] - NextRadius), self.height+thickness, 0), math.pi, FlexElement[3], 0)
+        hLine.drawNotchLine(self.path)
+        xpos -= FlexElement[0] - FlexElement[2] - NextRadius
+
+        NextRadius = self.FlexBandList[4][2]        #Last corner (FR)
+        FlexElement = self.FlexBandList[5]          #From FL (5)
+        DebugMsg("Return to first Element front right: xpos="+str(xpos)+' Size ='+str(FlexElement[0])+" radius ="+str(FlexElement[2])+" NextRadius="+str(NextRadius)+' --> '+str(FlexElement[0] - FlexElement[2] - NextRadius)+'\n')
+        #Draw Last round corner (FL)
+        self.path.LineTo(xpos - FlexElement[2]*math.pi/2, self.height+thickness)
+        xpos -= FlexElement[2]*math.pi/2
+        DebugMsg("Last Round corner (FL), l="+str(FlexElement[2]*math.pi/2)+" new pos="+str((xpos, self.height+thickness))+'\n')
+        #Then Notch Line, half of it
+        hLine = NotchLine((xpos, self.height+thickness, 0), (xpos-(FlexElement[0]-FlexElement[2]-NextRadius), self.height+thickness, 0), math.pi, FlexElement[3], -1)      #Draw only first half
+        hLine.drawNotchLine(self.path)
+        xpos -= (FlexElement[0]-FlexElement[2] - NextRadius)/2
         self.path.LineTo(xpos, self.height)
         #Then Vertical clip line
         DebugMsg('Vertical Clip 2, pos='+str((xpos, self.height))+'\n')
@@ -2159,6 +2451,10 @@ class GenericBox(inkex.Effect):
           type = float, dest = 'front_right_radius', default = '10.0',
           help = 'Radius of bottom right rounded corner')
 
+        self.arg_parser.add_argument('--Halves_x_2', action = 'store',
+            type = inkex.Boolean, dest = 'Halves_x_2', default = 'true',
+            help = 'Cut Flex Band in 2 halves')
+
         self.arg_parser.add_argument('--AutoSize', action = 'store',
           type = inkex.Boolean, dest = 'AutoSizeJoints', default = 'true',
           help = 'Size of finger joints computed from box dimlensions')
@@ -2254,12 +2550,12 @@ class GenericBox(inkex.Effect):
         #First take into account radius
         x = min(xbox - back_left_radius - back_right_radius, xbox - front_right_radius - front_left_radius)
         if x < 18:
-            inkex.errormsg('Error: box length too small, should be at least 18mm + round radius')
+            inkex.errormsg('Error: box length too small, should be at least 18mm + round radius. Need at list a finger joint !')
             CloseDebugFile()
             exit()
         y = min(ybox - back_left_radius - front_left_radius, ybox - front_right_radius - back_right_radius)
         if y < 18:
-            inkex.errormsg('Error: box depth too small, should be at least 18mm + round radius')
+            inkex.errormsg('Error: box length too small, should be at least 18mm + round radius. Need at list a finger joint !')
             CloseDebugFile()
             exit()
         if x  <= 100:
@@ -2826,8 +3122,6 @@ class GenericBox(inkex.Effect):
 
                 
         svg = self.document.getroot()
-        docWidth = self.svg.unittouu(svg.get('width'))
-        docHeigh = self.svg.unittouu(svg.attrib['height'])
 
         layer = etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Generic Box')
@@ -3272,15 +3566,33 @@ class GenericBox(inkex.Effect):
 
         if front_right_radius > 0 and back_right_radius > 0 and back_left_radius > 0 and front_left_radius > 0:
             #Specific case, all corners are rounded
-            DebugMsg("\n\nFlex on all faces\n")
-            FlexBand = ('Flex_All', 1, 1,                                   #Draw flex all around the box with clips
+            DebugMsg("\n\nFlex on all faces, cut in half ="+str(self.options.Halves_x_2)+"\n")
+            if self.options.Halves_x_2:
+                FlexBand = ('Flex_All_Right', 1, 1,                                   #Draw flex all around the box with clips
                         (xbox, self.back_joint, back_right_radius, self.x_joint),         #(Half) Back Notch Line and round corner r= back_right_radius
                         (ybox, self.right_joint, front_right_radius, self.y_joint),       #Then Right notch line with Front/Right rounded corner
                         (xbox, self.front_joint, front_left_radius, self.x_joint),        #Then front notch line with Front/Left rounded corner
                         (ybox, self.left_joint, back_left_radius, self.y_joint),          #Then Laft notch line with Back/Left rounded corner
                         (xbox, self.back_joint, back_right_radius, self.x_joint))         #And another back line, (half)
-            Face = FlexFace(FlexBand, 0, zbox, self.z_joint, self.group, [xpos, ypos])
-            Face.drawRoundedFlexFace(True)
+                Face = FlexFace(FlexBand, 0, zbox, self.z_joint, self.group, [xpos, ypos])
+                Face.drawRoundedFlexFaceHalfRight(True)
+                FlexBand = ('Flex_All_Left', 1, 1,                                   #Draw flex all around the box with clips
+                        (xbox, self.back_joint, back_right_radius, self.x_joint),         #(Half) Back Notch Line and round corner r= back_right_radius
+                        (ybox, self.right_joint, front_right_radius, self.y_joint),       #Then Right notch line with Front/Right rounded corner
+                        (xbox, self.front_joint, front_left_radius, self.x_joint),        #Then front notch line with Front/Left rounded corner
+                        (ybox, self.left_joint, back_left_radius, self.y_joint),          #Then Laft notch line with Back/Left rounded corner
+                        (xbox, self.back_joint, back_right_radius, self.x_joint))         #And another back line, (half)
+                Face = FlexFace(FlexBand, 0, zbox, self.z_joint, self.group, [xpos - xbox - ybox, ypos])
+                Face.drawRoundedFlexFaceHalfLeft(True)
+            else:
+                FlexBand = ('Flex_All', 1, 1,                                   #Draw flex all around the box with clips
+                        (xbox, self.back_joint, back_right_radius, self.x_joint),         #(Half) Back Notch Line and round corner r= back_right_radius
+                        (ybox, self.right_joint, front_right_radius, self.y_joint),       #Then Right notch line with Front/Right rounded corner
+                        (xbox, self.front_joint, front_left_radius, self.x_joint),        #Then front notch line with Front/Left rounded corner
+                        (ybox, self.left_joint, back_left_radius, self.y_joint),          #Then Laft notch line with Back/Left rounded corner
+                        (xbox, self.back_joint, back_right_radius, self.x_joint))         #And another back line, (half)
+                Face = FlexFace(FlexBand, 0, zbox, self.z_joint, self.group, [xpos, ypos])
+                Face.drawRoundedFlexFace(True)
             self.UpdateBoundingBox(Face)    #Now update bounding box
         else:
             for FlexBand in FlexBandList:

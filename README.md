@@ -75,6 +75,8 @@ The user interface use tabs, each tab is dedicated to a specific part. You shoul
 
 2. Rounded corners tab. The first box makes it possible to force all the corners as rights. Alternatively, you can choose the radius of curvature of each corner independently. 0 indicates a right corner. Be careful not to put a value too low. Any value greater than 0 and less than 10 (approximately) should be outlawed. 
 
+When all corners are rounded, there is a single band of flex which can become quite long and then do not fit in the laser cutter. There is an option to divide the band in 2 halves. Do not use this option if not necessary, as the front of the box will have clips to attach both parts. In the normal case, these clips are only present on the back.
+
 <center>![Onglet_CoinsArrondis](https://user-images.githubusercontent.com/35993911/69336767-93d72b80-0c5f-11ea-9c42-00ed50379fef.png)</center><br>
 
 3. Cover style tab. The different lid styles were detailed in the previous paragraph. Choose the one that suits your use. Be aware that slide or hinged covers are incompatible with rounded corners at the back of the box. For chests, the 4 corners must be straight.
