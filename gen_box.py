@@ -2397,7 +2397,7 @@ class GenericBox(inkex.Effect):
 
         self.arg_parser.add_argument('--h_slot', action = 'store',
           type = int, dest = 'h_slot', default = '100',
-          help = 'Height of slots (%)')
+          help = 'Height of slots (%%)')
 
         self.arg_parser.add_argument('--z', action = 'store',
           type = float, dest = 'z', default = '40.0',
